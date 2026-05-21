@@ -285,15 +285,22 @@ const getRequestLineCompletions = async (
     }
   }
 
+  // Method already typed - suggest indices and endpoints for the path portion
+  // Detect current segment: the part after the last "/"
+  const fullPath = word.text
+  const lastSlashIdx = fullPath.lastIndexOf('/')
+  const currentSegment = lastSlashIdx >= 0 ? fullPath.slice(lastSlashIdx + 1).toLowerCase() : fullPath.toLowerCase()
+  const segmentFrom = lastSlashIdx >= 0 ? word.from + lastSlashIdx + 1 : word.from
+
   const indices = await fetchIndices()
-  const matchedIndices = indices.filter(idx => fuzzyMatch(typed, idx.toLowerCase()))
-  const matchedEndpoints = ES_ENDPOINTS.filter(ep => fuzzyMatch(typed, ep.toLowerCase()))
+  const matchedIndices = indices.filter(idx => fuzzyMatch(currentSegment, idx.toLowerCase()))
+  const matchedEndpoints = ES_ENDPOINTS.filter(ep => fuzzyMatch(currentSegment, ep.toLowerCase()))
   const options = [
     ...matchedIndices.map(idx => ({ label: idx, type: 'variable', boost: 1 })),
     ...matchedEndpoints.map(ep => ({ label: ep, type: 'function', boost: 0 }))
   ]
 
-  return { from: word.from, filter: false, options }
+  return { from: segmentFrom, filter: false, options }
 }
 
 const getBodyCompletions = async (
