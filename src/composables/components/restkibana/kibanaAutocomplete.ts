@@ -5,6 +5,16 @@ import { clusterAuthHeader } from '../../../helpers/elasticsearchAdapter'
 import { fetchMethod } from '../../../helpers/fetch'
 import { syntaxTree } from '@codemirror/language'
 
+/** Subsequence fuzzy match: does `pattern` appear as a subsequence in `text`? */
+const fuzzyMatch = (pattern: string, text: string): boolean => {
+  if (!pattern) return true
+  let pi = 0
+  for (let ti = 0; ti < text.length && pi < pattern.length; ti++) {
+    if (text[ti] === pattern[pi]) pi++
+  }
+  return pi === pattern.length
+}
+
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'PATCH', 'OPTIONS']
 const ES_ENDPOINTS = [
   '_search', '_count', '_doc', '_bulk', '_update', '_update_by_query',
@@ -263,27 +273,34 @@ const getRequestLineCompletions = async (
   if (!word) return null
 
   const hasMethod = REQUEST_LINE_REGEX.test(lineText)
+  const typed = word.text.toLowerCase()
 
   if (!hasMethod) {
-    // No method yet - suggest HTTP methods prominently + indices/endpoints
+    // No method yet - suggest HTTP methods with fuzzy match + indices/endpoints
     const indices = await fetchIndices()
+    const matchedMethods = HTTP_METHODS.filter(m => fuzzyMatch(typed, m.toLowerCase()))
+    const matchedIndices = indices.filter(idx => fuzzyMatch(typed, idx.toLowerCase()))
+    const matchedEndpoints = ES_ENDPOINTS.filter(ep => fuzzyMatch(typed, ep.toLowerCase()))
     return {
       from: word.from,
+      filter: false,
       options: [
-        ...HTTP_METHODS.map(m => ({ label: m, type: 'keyword', boost: 2 })),
-        ...indices.map(idx => ({ label: idx, type: 'variable', boost: 0 })),
-        ...ES_ENDPOINTS.map(ep => ({ label: ep, type: 'function', boost: -1 }))
+        ...matchedMethods.map(m => ({ label: m, type: 'keyword', boost: 2 })),
+        ...matchedIndices.map(idx => ({ label: idx, type: 'variable', boost: 0 })),
+        ...matchedEndpoints.map(ep => ({ label: ep, type: 'function', boost: -1 }))
       ]
     }
   }
 
   const indices = await fetchIndices()
+  const matchedIndices = indices.filter(idx => fuzzyMatch(typed, idx.toLowerCase()))
+  const matchedEndpoints = ES_ENDPOINTS.filter(ep => fuzzyMatch(typed, ep.toLowerCase()))
   const options = [
-    ...indices.map(idx => ({ label: idx, type: 'variable', boost: 1 })),
-    ...ES_ENDPOINTS.map(ep => ({ label: ep, type: 'function', boost: 0 }))
+    ...matchedIndices.map(idx => ({ label: idx, type: 'variable', boost: 1 })),
+    ...matchedEndpoints.map(ep => ({ label: ep, type: 'function', boost: 0 }))
   ]
 
-  return { from: word.from, options }
+  return { from: word.from, filter: false, options }
 }
 
 const getBodyCompletions = async (
@@ -294,34 +311,41 @@ const getBodyCompletions = async (
   if (!word && !context.explicit) return null
 
   const from = word?.from ?? context.pos
+  const typed = (word?.text || '').toLowerCase()
   const isKeyPosition = isPropertyNamePosition(context)
 
   if (isKeyPosition) {
-    // Suggest property keys with colon appended
-    const options = ES_QUERY_KEYWORDS.map(w => ({
-      label: w,
-      type: 'keyword',
-      apply: `"${w}": `
-    }))
+    // Suggest property keys with colon appended, fuzzy filtered
+    const options = ES_QUERY_KEYWORDS
+      .filter(w => fuzzyMatch(typed, w))
+      .map(w => ({
+        label: w,
+        type: 'keyword',
+        apply: `"${w}": `
+      }))
 
     // Add mapping fields as property keys too
     if (indexName) {
       const fields = await fetchMappingFields(indexName)
-      fields.forEach(f => {
-        options.push({ label: f, type: 'property', apply: `"${f}": ` })
-      })
+      fields
+        .filter(f => fuzzyMatch(typed, f.toLowerCase()))
+        .forEach(f => {
+          options.push({ label: f, type: 'property', apply: `"${f}": ` })
+        })
     }
 
-    return { from, options }
+    return { from, filter: false, options }
   } else {
-    // Suggest values (no colon)
-    const options = ES_QUERY_VALUES.map(w => ({
-      label: w,
-      type: 'text',
-      apply: `"${w}"`
-    }))
+    // Suggest values (no colon), fuzzy filtered
+    const options = ES_QUERY_VALUES
+      .filter(w => fuzzyMatch(typed, w.toLowerCase()))
+      .map(w => ({
+        label: w,
+        type: 'text',
+        apply: `"${w}"`
+      }))
 
-    return { from, options }
+    return { from, filter: false, options }
   }
 }
 
