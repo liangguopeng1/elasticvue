@@ -2,15 +2,22 @@ import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate } from '@
 import { RangeSetBuilder } from '@codemirror/state'
 
 const REQUEST_LINE_REGEX = /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+/
+const REQUEST_PARTS_REGEX = /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(\S+)/
 
 // Decoration for request line (subtle background)
 const requestLineHighlight = Decoration.line({ class: 'cm-kibana-request-line' })
+
+// Inline mark decorations for syntax highlighting
+const methodMark = Decoration.mark({ class: 'cm-kibana-method' })
+const indexMark = Decoration.mark({ class: 'cm-kibana-index' })
+const pathMark = Decoration.mark({ class: 'cm-kibana-path' })
 
 // Decoration for current active request block (blue left border)
 const activeBlockLine = Decoration.line({ class: 'cm-kibana-active-block' })
 
 /**
- * Plugin that highlights all request lines with a background color
+ * Plugin that highlights request lines with background + inline syntax coloring
+ * for HTTP method, index name, and API path.
  */
 const kibanaLineHighlightPlugin = ViewPlugin.fromClass(
   class {
@@ -30,8 +37,33 @@ const kibanaLineHighlightPlugin = ViewPlugin.fromClass(
       const builder = new RangeSetBuilder<Decoration>()
       for (let i = 1; i <= view.state.doc.lines; i++) {
         const line = view.state.doc.line(i)
-        if (REQUEST_LINE_REGEX.test(line.text)) {
+        const match = line.text.match(REQUEST_PARTS_REGEX)
+        if (match) {
+          // Line background
           builder.add(line.from, line.from, requestLineHighlight)
+
+          // Method highlight (e.g. GET, POST)
+          const methodStart = line.from
+          const methodEnd = line.from + match[1].length
+          builder.add(methodStart, methodEnd, methodMark)
+
+          // Path highlight - split into index and API path
+          const pathStr = match[2]
+          const pathStart = line.from + match[0].indexOf(pathStr)
+          const segments = pathStr.split('/')
+          const firstSegment = segments[0]
+
+          if (firstSegment && !firstSegment.startsWith('_')) {
+            // First segment is an index name
+            builder.add(pathStart, pathStart + firstSegment.length, indexMark)
+            // Rest is the API path
+            if (pathStr.length > firstSegment.length) {
+              builder.add(pathStart + firstSegment.length, pathStart + pathStr.length, pathMark)
+            }
+          } else {
+            // Entire path is an API endpoint (e.g. _cat/indices)
+            builder.add(pathStart, pathStart + pathStr.length, pathMark)
+          }
         }
       }
       return builder.finish()
@@ -120,10 +152,30 @@ export const kibanaTheme = EditorView.baseTheme({
     borderLeft: '3px solid #1976d2',
     paddingLeft: '8px'
   },
+  '.cm-kibana-method': {
+    color: '#d32f2f',
+    fontWeight: 'bold'
+  },
+  '.cm-kibana-index': {
+    color: '#6a1b9a',
+    fontWeight: '600'
+  },
+  '.cm-kibana-path': {
+    color: '#1565c0'
+  },
   '&dark .cm-kibana-request-line': {
     backgroundColor: 'rgba(76, 175, 80, 0.15)'
   },
   '&dark .cm-kibana-active-block': {
     borderLeft: '3px solid #42a5f5'
+  },
+  '&dark .cm-kibana-method': {
+    color: '#ef5350'
+  },
+  '&dark .cm-kibana-index': {
+    color: '#ce93d8'
+  },
+  '&dark .cm-kibana-path': {
+    color: '#64b5f6'
   }
 })
