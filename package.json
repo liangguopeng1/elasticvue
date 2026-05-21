@@ -6,7 +6,7 @@
     "node": ">=24.15.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "tsc": "tsc --noEmit && vue-tsc",
     "lint": "eslint src tests --fix",

@@ -11,18 +11,12 @@ class RunGutterMarker extends GutterMarker {
     this.lineNumber = lineNumber
   }
 
-  toDOM(view: EditorView) {
+  toDOM() {
     const btn = document.createElement('span')
     btn.className = 'kibana-run-btn'
     btn.textContent = '▶'
     btn.title = 'Run request (Ctrl+Enter)'
     btn.style.cursor = 'pointer'
-    btn.addEventListener('click', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      const event = new CustomEvent('kibana-run', { detail: { line: this.lineNumber } })
-      view.dom.dispatchEvent(event)
-    })
     return btn
   }
 }
@@ -38,6 +32,18 @@ const kibanaRunGutter = gutter({
       }
     }
     return builder.finish()
+  },
+  domEventHandlers: {
+    mousedown(view, line) {
+      const lineInfo = view.state.doc.lineAt(line.from)
+      if (REQUEST_LINE_REGEX.test(lineInfo.text)) {
+        const lineNumber = lineInfo.number - 1
+        const event = new CustomEvent('kibana-run', { detail: { line: lineNumber }, bubbles: true })
+        view.dom.dispatchEvent(event)
+        return true
+      }
+      return false
+    }
   }
 })
 

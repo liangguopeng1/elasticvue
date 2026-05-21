@@ -69,8 +69,8 @@ export const useKibanaEditor = (
       doc: initialValue
     })
 
-    // Listen for gutter button clicks
-    editorRef.value.addEventListener('kibana-run', ((e: CustomEvent) => {
+    // Listen for gutter button clicks on the editor DOM directly
+    editorView.dom.addEventListener('kibana-run', ((e: CustomEvent) => {
       const line = e.detail.line
       const content = editorView.state.doc.toString()
       const requests = parseKibanaRequests(content)
