@@ -196,6 +196,22 @@ const getRequestLineContext = (doc: string, pos: number) => {
 
   const lineText = lines[currentLine]
 
+  // Determine if we're inside a JSON body (between { })
+  let isInsideBody = false
+  let braceDepth = 0
+  for (let i = 0; i < currentLine; i++) {
+    for (const ch of lines[i]) {
+      if (ch === '{') braceDepth++
+      else if (ch === '}') braceDepth--
+    }
+  }
+  if (braceDepth > 0) isInsideBody = true
+
+  // A line is a "request line" context if it already has a method,
+  // OR if it's not inside a body block (user might be typing a new method)
+  const hasMethod = REQUEST_LINE_REGEX.test(lineText)
+  const isRequestLineContext = hasMethod || !isInsideBody
+
   let indexName = ''
   for (let i = currentLine; i >= 0; i--) {
     const match = lines[i].match(REQUEST_LINE_REGEX)
@@ -209,7 +225,7 @@ const getRequestLineContext = (doc: string, pos: number) => {
     }
   }
 
-  return { isRequestLine: REQUEST_LINE_REGEX.test(lineText), lineText, currentLine, indexName }
+  return { isRequestLine: isRequestLineContext, lineText, currentLine, indexName }
 }
 
 /**
@@ -249,9 +265,15 @@ const getRequestLineCompletions = async (
   const hasMethod = REQUEST_LINE_REGEX.test(lineText)
 
   if (!hasMethod) {
+    // No method yet - suggest HTTP methods prominently + indices/endpoints
+    const indices = await fetchIndices()
     return {
       from: word.from,
-      options: HTTP_METHODS.map(m => ({ label: m, type: 'keyword' }))
+      options: [
+        ...HTTP_METHODS.map(m => ({ label: m, type: 'keyword', boost: 2 })),
+        ...indices.map(idx => ({ label: idx, type: 'variable', boost: 0 })),
+        ...ES_ENDPOINTS.map(ep => ({ label: ep, type: 'function', boost: -1 }))
+      ]
     }
   }
 
