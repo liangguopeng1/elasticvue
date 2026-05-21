@@ -24,4 +24,9 @@ useKibanaEditor(editorEl, { initialValue: props.modelValue, emit })
   position: relative;
   overflow: hidden;
 }
+
+.kibana-code-editor :deep(.cm-line) {
+  position: relative;
+  padding-right: 80px;
+}
 </style>

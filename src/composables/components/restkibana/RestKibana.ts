@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { useConnectionStore } from '../../../store/connection'
+import { useRestKibanaStore } from '../../../store/restKibana'
 import { useSnackbar } from '../../Snackbar'
 import { REQUEST_DEFAULT_HEADERS } from '../../../consts'
 import { clusterAuthHeader } from '../../../helpers/elasticsearchAdapter'
@@ -9,6 +10,7 @@ import stripJsonComments from 'strip-json-comments'
 
 export const useRestKibana = () => {
   const connectionStore = useConnectionStore()
+  const restKibanaStore = useRestKibanaStore()
   const { showErrorSnackbar } = useSnackbar()
 
   const responseBody = ref('')
@@ -22,6 +24,7 @@ export const useRestKibana = () => {
     loading.value = true
     responseStatus.value = ''
     responseBody.value = ''
+    responseOk.value = false
 
     const method = request.method
     const body = ['GET', 'HEAD'].includes(method) ? null : stripJsonComments(request.body)
@@ -40,9 +43,22 @@ export const useRestKibana = () => {
       responseOk.value = response.ok
       const text = await response.text()
       responseBody.value = text || ''
+
+      restKibanaStore.addHistory({
+        method: request.method,
+        path: request.path,
+        body: request.body,
+        status: responseStatus.value
+      })
     } catch (_e) {
       responseBody.value = '// Network Error'
       showErrorSnackbar({ title: 'Error', body: 'Network Error' })
+      restKibanaStore.addHistory({
+        method: request.method,
+        path: request.path,
+        body: request.body,
+        status: 'Error'
+      })
     } finally {
       loading.value = false
     }

@@ -7,9 +7,14 @@ import { json } from '@codemirror/lang-json'
 import { autocompletion } from '@codemirror/autocomplete'
 import { baseTheme } from '../../CodeEditor/theme'
 import { useCodeEditorStore } from '../../../store/codeEditor'
+import { useConnectionStore } from '../../../store/connection'
+import { beautify } from '../../../helpers/beautify'
+import { writeToClipboard } from '../../../helpers/clipboard'
 import { parseKibanaRequests, getRequestAtLine } from './kibanaParser'
 import { kibanaExtensions, kibanaTheme } from './kibanaDecorations'
+import { kibanaRunWidgetPlugin, kibanaRunWidgetTheme } from './kibanaRunWidget'
 import { kibanaCompletionSource } from './kibanaAutocomplete'
+import { buildCurlCommand, getApiReferenceUrl } from './kibanaRequestActions'
 import { vim } from '@replit/codemirror-vim'
 
 export const useKibanaEditor = (
@@ -20,18 +25,47 @@ export const useKibanaEditor = (
   }
 ) => {
   const codeEditorStore = useCodeEditorStore()
+  const connectionStore = useConnectionStore()
   let editorView: EditorView
+
+  const executeRequestAtLine = (line: number) => {
+    const content = editorView.state.doc.toString()
+    const requests = parseKibanaRequests(content)
+    const request = getRequestAtLine(requests, line)
+    if (request) emit('execute', request)
+  }
 
   const executeCurrentRequest = () => {
     const state = editorView.state
-    const line = state.doc.lineAt(state.selection.main.head).number - 1
-    const content = state.doc.toString()
+    executeRequestAtLine(state.doc.lineAt(state.selection.main.head).number - 1)
+    return true
+  }
+
+  const handleAction = (line: number, action: string) => {
+    const content = editorView.state.doc.toString()
     const requests = parseKibanaRequests(content)
     const request = getRequestAtLine(requests, line)
-    if (request) {
-      emit('execute', request)
+    if (!request) return
+
+    switch (action) {
+      case 'copy-curl':
+        void writeToClipboard(buildCurlCommand(request, connectionStore.activeCluster?.uri || 'http://localhost:9200'))
+        break
+      case 'auto-indent':
+        if (request.body) {
+          const formatted = beautify(request.body)
+          const doc = editorView.state.doc
+          const startLine = doc.line(request.startLine + 2)
+          const endLine = doc.line(request.endLine + 1)
+          editorView.dispatch({
+            changes: { from: startLine.from, to: endLine.to, insert: formatted }
+          })
+        }
+        break
+      case 'open-docs':
+        window.open(getApiReferenceUrl(request.path), '_blank')
+        break
     }
-    return true
   }
 
   onMounted(() => {
@@ -56,6 +90,8 @@ export const useKibanaEditor = (
         }),
         ...kibanaExtensions,
         kibanaTheme,
+        kibanaRunWidgetPlugin,
+        kibanaRunWidgetTheme,
         onChange,
         keymap.of([indentWithTab]),
         keymap.of([
@@ -69,13 +105,12 @@ export const useKibanaEditor = (
       doc: initialValue
     })
 
-    // Listen for gutter button clicks on the editor DOM directly
     editorView.dom.addEventListener('kibana-run', ((e: CustomEvent) => {
-      const line = e.detail.line
-      const content = editorView.state.doc.toString()
-      const requests = parseKibanaRequests(content)
-      const request = getRequestAtLine(requests, line)
-      if (request) emit('execute', request)
+      executeRequestAtLine(e.detail.line)
+    }) as EventListener)
+
+    editorView.dom.addEventListener('kibana-action', ((e: CustomEvent) => {
+      handleAction(e.detail.line, e.detail.action)
     }) as EventListener)
   })
 

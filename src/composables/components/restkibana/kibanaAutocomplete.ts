@@ -3,20 +3,96 @@ import { useConnectionStore } from '../../../store/connection'
 import { REQUEST_DEFAULT_HEADERS } from '../../../consts'
 import { clusterAuthHeader } from '../../../helpers/elasticsearchAdapter'
 import { fetchMethod } from '../../../helpers/fetch'
-import { queryKeywords, queryValues } from '../../../autocomplete'
+import { syntaxTree } from '@codemirror/language'
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'PATCH', 'OPTIONS']
 const ES_ENDPOINTS = [
   '_search', '_count', '_doc', '_bulk', '_update', '_update_by_query',
   '_delete_by_query', '_mapping', '_settings', '_alias', '_aliases',
   '_cat/indices', '_cat/shards', '_cat/nodes', '_cat/health', '_cat/aliases',
-  '_cat/recovery', '_cat/segments', '_cat/count',
+  '_cat/recovery', '_cat/segments', '_cat/count', '_cat/thread_pool',
   '_cluster/health', '_cluster/stats', '_cluster/settings', '_cluster/state',
   '_nodes', '_nodes/stats', '_nodes/hot_threads',
   '_refresh', '_flush', '_forcemerge', '_cache/clear',
   '_reindex', '_analyze', '_validate/query',
   '_snapshot', '_slm/policy', '_template', '_index_template',
-  '_security/api_key', '_tasks', '_ingest/pipeline'
+  '_security/api_key', '_tasks', '_ingest/pipeline',
+  '_msearch', '_mget', '_field_caps', '_resolve/index'
+]
+
+// Comprehensive ES query DSL keywords (property keys that expect objects/values)
+const ES_QUERY_KEYWORDS = [
+  // Top-level search params
+  'query', 'size', 'from', 'sort', '_source', 'timeout', 'track_total_hits',
+  'highlight', 'aggs', 'aggregations', 'post_filter', 'rescore',
+  'collapse', 'search_after', 'pit', 'min_score', 'explain',
+  'version', 'seq_no_primary_term', 'stored_fields', 'script_fields',
+  'indices_boost', 'suggest', 'profile', 'ext',
+
+  // Query types
+  'match', 'match_all', 'match_none', 'match_phrase', 'match_phrase_prefix',
+  'multi_match', 'query_string', 'simple_query_string', 'combined_fields',
+
+  // Term-level queries
+  'term', 'terms', 'terms_set', 'range', 'exists', 'prefix',
+  'wildcard', 'regexp', 'fuzzy', 'ids', 'type',
+
+  // Compound queries
+  'bool', 'must', 'must_not', 'should', 'filter',
+  'boosting', 'constant_score', 'dis_max', 'function_score',
+
+  // Nested/Joining
+  'nested', 'has_child', 'has_parent', 'parent_id',
+
+  // Geo queries
+  'geo_bounding_box', 'geo_distance', 'geo_polygon', 'geo_shape',
+
+  // Special
+  'more_like_this', 'percolate', 'rank_feature', 'script', 'script_score',
+  'wrapper', 'pinned',
+
+  // Common params inside queries
+  'value', 'boost', 'analyzer', 'operator', 'fuzziness',
+  'prefix_length', 'max_expansions', 'minimum_should_match',
+  'lenient', 'zero_terms_query', 'cutoff_frequency',
+  'fields', 'tie_breaker', 'flags', 'default_field',
+  'default_operator', 'allow_leading_wildcard',
+
+  // Sort params
+  'order', 'mode', 'missing', 'unmapped_type',
+
+  // Aggregation types
+  'avg', 'sum', 'min', 'max', 'count', 'stats', 'extended_stats',
+  'cardinality', 'percentiles', 'percentile_ranks',
+  'value_count', 'top_hits', 'date_histogram', 'histogram',
+  'terms', 'range', 'date_range', 'filter', 'filters',
+  'global', 'missing', 'nested', 'reverse_nested', 'composite',
+  'bucket_sort', 'bucket_script',
+
+  // Highlight params
+  'pre_tags', 'post_tags', 'fragment_size', 'number_of_fragments',
+
+  // Source filtering
+  'includes', 'excludes',
+
+  // Range params
+  'gte', 'gt', 'lte', 'lt', 'format', 'time_zone',
+
+  // Index settings / mappings
+  'settings', 'mappings', 'properties', 'index',
+  'number_of_shards', 'number_of_replicas'
+]
+
+// Values (non-key strings)
+const ES_QUERY_VALUES = [
+  'AND', 'OR', 'NOT',
+  'asc', 'desc',
+  'true', 'false',
+  'phrase', 'phrase_prefix',
+  'best_fields', 'most_fields', 'cross_fields',
+  'all', 'none',
+  'AUTO',
+  'epoch_millis', 'epoch_second', 'strict_date_optional_time'
 ]
 
 const REQUEST_LINE_REGEX = /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(.*)/
@@ -136,7 +212,22 @@ const getRequestLineContext = (doc: string, pos: number) => {
   return { isRequestLine: REQUEST_LINE_REGEX.test(lineText), lineText, currentLine, indexName }
 }
 
+/**
+ * Determine if cursor is in a "property name" position (expects a key)
+ * vs a "property value" position (expects a value).
+ * Uses the syntax tree from CodeMirror's JSON parser.
+ */
+const isPropertyNamePosition = (context: CompletionContext): boolean => {
+  const node = syntaxTree(context.state).resolveInner(context.pos, -1)
+  // In JSON, property names are inside "PropertyName" or at Object level expecting a key
+  return node.name === 'Object' || node.name === 'PropertyName' || node.name === '⚠'
+}
+
 export const kibanaCompletionSource = async (context: CompletionContext): Promise<CompletionResult | null> => {
+  // Only trigger on word characters - not on punctuation like comma, colon, braces
+  const word = context.matchBefore(/[a-zA-Z_][\w.]*/)
+  if (!word && !context.explicit) return null
+
   const doc = context.state.doc.toString()
   const pos = context.pos
   const { isRequestLine, lineText, indexName } = getRequestLineContext(doc, pos)
@@ -177,24 +268,39 @@ const getBodyCompletions = async (
   context: CompletionContext,
   indexName: string
 ): Promise<CompletionResult | null> => {
-  const word = context.matchBefore(/[\w.]*/)
+  const word = context.matchBefore(/[a-zA-Z_][\w.]*/)
   if (!word && !context.explicit) return null
 
   const from = word?.from ?? context.pos
+  const isKeyPosition = isPropertyNamePosition(context)
 
-  const options = [
-    ...queryKeywords.map(w => ({ label: w, type: 'keyword', apply: `"${w}"` })),
-    ...queryValues.map(w => ({ label: w, type: 'text', apply: `"${w}"` }))
-  ]
+  if (isKeyPosition) {
+    // Suggest property keys with colon appended
+    const options = ES_QUERY_KEYWORDS.map(w => ({
+      label: w,
+      type: 'keyword',
+      apply: `"${w}": `
+    }))
 
-  if (indexName) {
-    const fields = await fetchMappingFields(indexName)
-    fields.forEach(f => {
-      options.push({ label: f, type: 'property', apply: `"${f}"` })
-    })
+    // Add mapping fields as property keys too
+    if (indexName) {
+      const fields = await fetchMappingFields(indexName)
+      fields.forEach(f => {
+        options.push({ label: f, type: 'property', apply: `"${f}": ` })
+      })
+    }
+
+    return { from, options }
+  } else {
+    // Suggest values (no colon)
+    const options = ES_QUERY_VALUES.map(w => ({
+      label: w,
+      type: 'text',
+      apply: `"${w}"`
+    }))
+
+    return { from, options }
   }
-
-  return { from, options }
 }
 
 export const clearKibanaAutocompleteCache = () => {
