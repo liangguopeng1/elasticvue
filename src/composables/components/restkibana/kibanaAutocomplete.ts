@@ -276,28 +276,12 @@ const getRequestLineCompletions = async (
   const typed = word.text.toLowerCase()
 
   if (!hasMethod) {
-    // No method yet - on empty input only show HTTP methods
+    // No method yet - only suggest HTTP methods
     const matchedMethods = HTTP_METHODS.filter(m => fuzzyMatch(typed, m.toLowerCase()))
-    if (!typed) {
-      // Empty line: only suggest HTTP methods
-      return {
-        from: word.from,
-        filter: false,
-        options: matchedMethods.map(m => ({ label: m, type: 'keyword', boost: 2 }))
-      }
-    }
-    // User started typing: show methods + indices/endpoints
-    const indices = await fetchIndices()
-    const matchedIndices = indices.filter(idx => fuzzyMatch(typed, idx.toLowerCase()))
-    const matchedEndpoints = ES_ENDPOINTS.filter(ep => fuzzyMatch(typed, ep.toLowerCase()))
     return {
       from: word.from,
       filter: false,
-      options: [
-        ...matchedMethods.map(m => ({ label: m, type: 'keyword', boost: 2 })),
-        ...matchedIndices.map(idx => ({ label: idx, type: 'variable', boost: 0 })),
-        ...matchedEndpoints.map(ep => ({ label: ep, type: 'function', boost: -1 }))
-      ]
+      options: matchedMethods.map(m => ({ label: m, type: 'keyword', boost: 2 }))
     }
   }
 
