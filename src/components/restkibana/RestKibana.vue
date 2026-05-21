@@ -22,12 +22,15 @@
                   @execute="executeRequest"
                 />
               </div>
-              <div class="col-6 q-pl-sm full-height">
-                <div class="q-mb-sm">
-                  <q-chip v-if="responseStatus" :label="responseStatus" :class="statusClass" />
-                  <q-spinner v-if="loading" class="q-ml-sm" />
+              <div class="col-6 q-pl-sm full-height" style="display: flex; flex-direction: column">
+                <div style="flex: 1; overflow: auto; position: relative">
+                  <q-spinner v-if="loading" class="absolute-center" size="2em" color="primary" />
+                  <code-viewer :value="responseBody" />
                 </div>
-                <code-viewer :value="responseBody" />
+                <div v-if="responseStatus || responseDuration" class="q-pa-xs q-mt-xs" style="border-top: 1px solid rgba(0,0,0,0.12); display: flex; align-items: center; gap: 8px">
+                  <q-chip v-if="responseStatus" :label="responseStatus" :class="statusClass" dense size="sm" />
+                  <span v-if="responseDuration" class="text-caption text-grey-7">{{ responseDuration }} ms</span>
+                </div>
               </div>
             </div>
           </resizable-container>
@@ -97,7 +100,7 @@ const CodeViewer = defineAsyncComponent(() => import('../shared/CodeViewer.vue')
 const t = useTranslation()
 const restKibanaStore = useRestKibanaStore()
 const resizeStore = useResizeStore()
-const { responseBody, responseStatus, loading, executeRequest } = useRestKibana()
+const { responseBody, responseStatus, loading, responseDuration, executeRequest } = useRestKibana()
 
 const maxHistorySize = ref(restKibanaStore.maxHistorySize)
 

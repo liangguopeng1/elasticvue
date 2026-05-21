@@ -17,6 +17,7 @@ export const useRestKibana = () => {
   const responseStatus = ref('')
   const responseOk = ref(false)
   const loading = ref(false)
+  const responseDuration = ref(0)
 
   const executeRequest = async (request: KibanaRequest) => {
     if (!connectionStore.activeCluster || !request) return
@@ -25,6 +26,7 @@ export const useRestKibana = () => {
     responseStatus.value = ''
     responseBody.value = ''
     responseOk.value = false
+    responseDuration.value = 0
 
     const method = request.method
     const body = ['GET', 'HEAD'].includes(method) ? null : stripJsonComments(request.body)
@@ -37,8 +39,11 @@ export const useRestKibana = () => {
     if (!url.endsWith('/') && !request.path.startsWith('/')) url += '/'
     url += request.path
 
+    const startTime = performance.now()
+
     try {
       const response = await fetchMethod(url, { method, body, headers })
+      responseDuration.value = Math.round(performance.now() - startTime)
       responseStatus.value = `${response.status} ${response.statusText}`
       responseOk.value = response.ok
       const text = await response.text()
@@ -51,6 +56,7 @@ export const useRestKibana = () => {
         status: responseStatus.value
       })
     } catch (_e) {
+      responseDuration.value = Math.round(performance.now() - startTime)
       responseBody.value = '// Network Error'
       showErrorSnackbar({ title: 'Error', body: 'Network Error' })
       restKibanaStore.addHistory({
@@ -69,6 +75,7 @@ export const useRestKibana = () => {
     responseStatus,
     responseOk,
     loading,
+    responseDuration,
     executeRequest
   }
 }
