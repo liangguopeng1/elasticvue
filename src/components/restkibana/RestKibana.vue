@@ -25,9 +25,9 @@
               <div class="col-6 q-pl-sm full-height" style="position: relative">
                 <q-spinner v-if="loading" class="absolute-center" style="z-index: 5" size="2em" color="primary" />
                 <code-viewer :value="responseBody" />
-                <div v-if="responseStatus || responseDuration" class="q-pa-xs" style="position: absolute; bottom: 4px; right: 8px; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.9); border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); z-index: 5">
+                <div v-if="responseStatus || responseDuration" class="q-pa-xs" style="position: absolute; bottom: 4px; right: 8px; display: flex; align-items: center; gap: 8px; z-index: 5">
                   <q-chip v-if="responseStatus" :label="responseStatus" :class="statusClass" dense size="sm" />
-                  <span v-if="responseDuration" class="text-caption text-grey-7">{{ responseDuration }} ms</span>
+                  <q-chip v-if="responseDuration" :label="`${responseDuration} ms`" color="grey-3" text-color="grey-8" dense size="sm" icon="schedule" />
                 </div>
               </div>
             </div>
