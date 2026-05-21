@@ -39,6 +39,7 @@ const routes = [
       { path: 'nodes', name: 'nodes', component: ClusterNodes },
       { path: 'search', name: 'search', component: SearchDocuments },
       { path: 'rest', name: 'rest', component: RestQuery },
+      { path: 'rest_kibana', name: 'rest_kibana', component: () => import('./components/restkibana/RestKibana.vue') },
       { path: 'snapshot_repositories', name: 'snapshot_repositories', component: SnapshotRepositories },
       { path: 'snapshot_repositories/:repositoryName', name: 'snapshots', component: RepositorySnapshots }
     ],

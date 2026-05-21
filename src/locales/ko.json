@@ -11,6 +11,7 @@
         "shards": "샤드",
         "search": "검색",
         "rest": "REST",
+        "rest_kibana": "Kibana",
         "snapshots": "스냅샷"
       }
     },
@@ -366,6 +367,11 @@
         }
       }
     }
+  },
+  "rest_kibana": {
+    "heading": "Rest Kibana",
+    "run_request": "Run request",
+    "no_request": "No request found at cursor position"
   },
   "repositories": {
     "heading": "스냅샷 저장소",

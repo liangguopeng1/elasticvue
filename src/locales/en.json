@@ -11,6 +11,7 @@
         "shards": "Shards",
         "search": "Search",
         "rest": "REST",
+        "rest_kibana": "Kibana",
         "snapshots": "Snapshots"
       }
     },
@@ -384,6 +385,11 @@
         }
       }
     }
+  },
+  "rest_kibana": {
+    "heading": "Rest Kibana",
+    "run_request": "Run request",
+    "no_request": "No request found at cursor position"
   },
   "repositories": {
     "heading": "Snapshot Repositories",

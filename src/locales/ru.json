@@ -11,6 +11,7 @@
         "shards": "Шарды",
         "search": "Поиск",
         "rest": "REST",
+        "rest_kibana": "Kibana",
         "snapshots": "Снимки"
       }
     },
@@ -366,6 +367,11 @@
         }
       }
     }
+  },
+  "rest_kibana": {
+    "heading": "Rest Kibana",
+    "run_request": "Run request",
+    "no_request": "No request found at cursor position"
   },
   "repositories": {
     "heading": "Репозитории снимков",

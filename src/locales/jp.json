@@ -11,6 +11,7 @@
         "shards": "シャード",
         "search": "検索",
         "rest": "REST",
+        "rest_kibana": "Kibana",
         "snapshots": "スナップショット"
       }
     },
@@ -366,6 +367,11 @@
         }
       }
     }
+  },
+  "rest_kibana": {
+    "heading": "Rest Kibana",
+    "run_request": "Run request",
+    "no_request": "No request found at cursor position"
   },
   "repositories": {
     "heading": "スナップショットリポジトリ",
