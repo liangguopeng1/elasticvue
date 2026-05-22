@@ -25,6 +25,11 @@ useKibanaEditor(editorEl, { initialValue: props.modelValue, emit })
   overflow: hidden;
 }
 
+.kibana-code-editor :deep(.cm-editor) {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+}
+
 .kibana-code-editor :deep(.cm-line) {
   position: relative;
   padding-right: 80px;
