@@ -57,7 +57,8 @@
                   <pre class="kibana-history-preview">{{ item.body || '(no body)' }}</pre>
                   <div class="q-mt-xs q-gutter-xs">
                     <q-btn dense flat size="sm" color="primary" icon="edit" label="写入 Shell" @click="useHistoryItem(item)" />
-                    <q-btn dense flat size="sm" icon="content_copy" label="追加到 Shell" @click="copyToEditor(item)" />
+                    <q-btn dense flat size="sm" icon="add" label="追加到 Shell" @click="copyToEditor(item)" />
+                    <q-btn dense flat size="sm" icon="content_copy" label="复制" @click="copyToClipboard(item)" />
                   </div>
                 </div>
               </q-item-section>
@@ -95,6 +96,7 @@ import { useTranslation } from '../../composables/i18n'
 import { useRestKibana } from '../../composables/components/restkibana/RestKibana'
 import { KibanaHistoryItem, useRestKibanaStore } from '../../store/restKibana'
 import { useResizeStore } from '../../store/resize'
+import { writeToClipboard } from '../../helpers/clipboard'
 import KibanaCodeEditor from './KibanaCodeEditor.vue'
 import ResizableContainer from '../shared/ResizableContainer.vue'
 
@@ -134,6 +136,11 @@ const copyToEditor = (item: KibanaHistoryItem) => {
   const content = item.body ? `${item.method} ${item.path}\n${item.body}` : `${item.method} ${item.path}`
   restKibanaStore.editorContent += '\n\n' + content
   restKibanaStore.activeTab = 'shell'
+}
+
+const copyToClipboard = (item: KibanaHistoryItem) => {
+  const content = item.body ? `${item.method} ${item.path}\n${item.body}` : `${item.method} ${item.path}`
+  void writeToClipboard(content)
 }
 
 const updateMaxHistory = (val: number | string | null) => {
