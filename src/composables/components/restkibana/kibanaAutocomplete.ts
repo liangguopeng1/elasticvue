@@ -93,6 +93,50 @@ const ES_QUERY_KEYWORDS = [
   'number_of_shards', 'number_of_replicas'
 ]
 
+// Snippet templates for keywords with fixed syntax structures
+const ES_KEYWORD_SNIPPETS: Record<string, string> = {
+  'match_all': '"match_all": {}',
+  'match_none': '"match_none": {}',
+  'track_total_hits': '"track_total_hits": true',
+  'match': '"match": {\n    "FIELD": "TEXT"\n  }',
+  'match_phrase': '"match_phrase": {\n    "FIELD": "TEXT"\n  }',
+  'match_phrase_prefix': '"match_phrase_prefix": {\n    "FIELD": "TEXT"\n  }',
+  'multi_match': '"multi_match": {\n    "query": "TEXT",\n    "fields": ["FIELD1", "FIELD2"]\n  }',
+  'term': '"term": {\n    "FIELD": "VALUE"\n  }',
+  'terms': '"terms": {\n    "FIELD": ["VALUE1", "VALUE2"]\n  }',
+  'range': '"range": {\n    "FIELD": {\n      "gte": 10,\n      "lte": 20\n    }\n  }',
+  'exists': '"exists": {\n    "field": "FIELD"\n  }',
+  'prefix': '"prefix": {\n    "FIELD": "VALUE"\n  }',
+  'wildcard': '"wildcard": {\n    "FIELD": "VALUE*"\n  }',
+  'regexp': '"regexp": {\n    "FIELD": "PATTERN"\n  }',
+  'fuzzy': '"fuzzy": {\n    "FIELD": {\n      "value": "TEXT",\n      "fuzziness": "AUTO"\n    }\n  }',
+  'ids': '"ids": {\n    "values": ["ID1", "ID2"]\n  }',
+  'bool': '"bool": {\n    "must": [],\n    "should": [],\n    "must_not": [],\n    "filter": []\n  }',
+  'nested': '"nested": {\n    "path": "FIELD",\n    "query": {}\n  }',
+  'query': '"query": {\n    \n  }',
+  'query_string': '"query_string": {\n    "query": "TEXT",\n    "default_field": "FIELD"\n  }',
+  'simple_query_string': '"simple_query_string": {\n    "query": "TEXT",\n    "fields": ["FIELD"]\n  }',
+  'constant_score': '"constant_score": {\n    "filter": {},\n    "boost": 1.0\n  }',
+  'function_score': '"function_score": {\n    "query": {},\n    "functions": []\n  }',
+  'dis_max': '"dis_max": {\n    "queries": []\n  }',
+  'boosting': '"boosting": {\n    "positive": {},\n    "negative": {},\n    "negative_boost": 0.5\n  }',
+  'has_child': '"has_child": {\n    "type": "CHILD_TYPE",\n    "query": {}\n  }',
+  'has_parent': '"has_parent": {\n    "parent_type": "PARENT_TYPE",\n    "query": {}\n  }',
+  'geo_distance': '"geo_distance": {\n    "distance": "10km",\n    "FIELD": { "lat": 0, "lon": 0 }\n  }',
+  'more_like_this': '"more_like_this": {\n    "fields": ["FIELD"],\n    "like": "TEXT",\n    "min_term_freq": 1\n  }',
+  'highlight': '"highlight": {\n    "fields": {\n      "FIELD": {}\n    }\n  }',
+  'sort': '"sort": [\n    { "FIELD": { "order": "desc" } }\n  ]',
+  'aggs': '"aggs": {\n    "NAME": {\n      "terms": { "field": "FIELD" }\n    }\n  }',
+  'aggregations': '"aggregations": {\n    "NAME": {\n      "terms": { "field": "FIELD" }\n    }\n  }',
+  '_source': '"_source": ["FIELD1", "FIELD2"]',
+  'script': '"script": {\n    "source": "SCRIPT",\n    "lang": "painless"\n  }',
+  'collapse': '"collapse": {\n    "field": "FIELD"\n  }',
+  'rescore': '"rescore": {\n    "window_size": 50,\n    "query": {\n      "rescore_query": {}\n    }\n  }',
+  'suggest': '"suggest": {\n    "NAME": {\n      "text": "TEXT",\n      "term": { "field": "FIELD" }\n    }\n  }',
+  'date_histogram': '"date_histogram": {\n    "field": "FIELD",\n    "calendar_interval": "month"\n  }',
+  'histogram': '"histogram": {\n    "field": "FIELD",\n    "interval": 10\n  }'
+}
+
 // Values (non-key strings)
 const ES_QUERY_VALUES = [
   'AND', 'OR', 'NOT',
@@ -320,14 +364,16 @@ const getBodyCompletions = async (
   const isKeyPosition = isPropertyNamePosition(context)
 
   if (isKeyPosition) {
-    // Suggest property keys with colon appended, fuzzy filtered
+    // Suggest property keys - use snippet templates when available
     const options = ES_QUERY_KEYWORDS
       .filter(w => fuzzyMatch(typed, w))
-      .map(w => ({
-        label: w,
-        type: 'keyword',
-        apply: `"${w}": `
-      }))
+      .map(w => {
+        const snippet = ES_KEYWORD_SNIPPETS[w]
+        if (snippet) {
+          return { label: w, type: 'keyword', apply: snippet, detail: '⟨snippet⟩', boost: 1 }
+        }
+        return { label: w, type: 'keyword', apply: `"${w}": `, boost: 0 }
+      })
 
     // Add mapping fields as property keys too
     if (indexName) {
@@ -335,7 +381,7 @@ const getBodyCompletions = async (
       fields
         .filter(f => fuzzyMatch(typed, f.toLowerCase()))
         .forEach(f => {
-          options.push({ label: f, type: 'property', apply: `"${f}": ` })
+          options.push({ label: f, type: 'property', apply: `"${f}": `, boost: 0 })
         })
     }
 
