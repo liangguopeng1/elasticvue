@@ -150,7 +150,9 @@ export const kibanaTheme = EditorView.baseTheme({
   },
   '.cm-kibana-active-block': {
     borderLeft: '3px solid #1976d2',
-    paddingLeft: '8px'
+    paddingLeft: '8px',
+    backgroundColor: 'rgba(25, 118, 210, 0.06)',
+    boxShadow: 'inset 0 0 0 1000px rgba(25, 118, 210, 0.04)'
   },
   '.cm-kibana-method': {
     color: '#d32f2f',
@@ -167,7 +169,9 @@ export const kibanaTheme = EditorView.baseTheme({
     backgroundColor: 'rgba(76, 175, 80, 0.15)'
   },
   '&dark .cm-kibana-active-block': {
-    borderLeft: '3px solid #42a5f5'
+    borderLeft: '3px solid #42a5f5',
+    backgroundColor: 'rgba(66, 165, 245, 0.08)',
+    boxShadow: 'inset 0 0 0 1000px rgba(66, 165, 245, 0.05)'
   },
   '&dark .cm-kibana-method': {
     color: '#ef5350'
