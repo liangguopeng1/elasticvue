@@ -463,8 +463,15 @@ const getBodyCompletions = async (
         return { label: w, type: 'keyword', apply: `"${w}": `, boost: 0 }
       })
 
-    // Add mapping fields as property keys too
-    if (indexName) {
+    // Add mapping fields only in contexts where field names are relevant
+    // (inside specific query types that accept field names as keys)
+    const FIELD_NAME_CONTEXTS = [
+      'match', 'match_phrase', 'match_phrase_prefix', 'term', 'terms',
+      'range', 'exists', 'prefix', 'wildcard', 'regexp', 'fuzzy',
+      'sort', 'highlight', 'fields', 'properties',
+      'geo_distance', 'geo_bounding_box', 'geo_shape'
+    ]
+    if (indexName && FIELD_NAME_CONTEXTS.includes(parentContext)) {
       const fields = await fetchMappingFields(indexName)
       fields
         .filter(f => fuzzyMatch(typed, f.toLowerCase()))
