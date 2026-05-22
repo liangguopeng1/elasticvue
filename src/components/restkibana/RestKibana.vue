@@ -43,7 +43,7 @@
             <q-btn flat color="negative" :label="t('rest_kibana.history.clear')" icon="delete" size="sm" @click="restKibanaStore.clearHistory()" />
           </div>
           <q-list v-if="restKibanaStore.history.length > 0" bordered separator>
-            <q-item v-for="item in restKibanaStore.history" :key="item.id" clickable @click="useHistoryItem(item)">
+            <q-item v-for="item in restKibanaStore.history" :key="item.id" clickable @click="togglePreview(item.id)">
               <q-item-section side>
                 <q-badge :color="item.status.startsWith('2') ? 'positive' : item.status.startsWith('4') || item.status.startsWith('5') ? 'negative' : 'grey'" :label="item.status || '—'" />
               </q-item-section>
@@ -53,9 +53,13 @@
                   {{ item.path }}
                 </q-item-label>
                 <q-item-label caption>{{ formatTime(item.timestamp) }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-btn flat round dense icon="content_copy" size="sm" @click.stop="copyToEditor(item)" />
+                <div v-if="previewId === item.id" class="q-mt-sm" @click.stop>
+                  <pre class="kibana-history-preview">{{ item.body || '(no body)' }}</pre>
+                  <div class="q-mt-xs q-gutter-xs">
+                    <q-btn dense flat size="sm" color="primary" icon="edit" label="写入 Shell" @click="useHistoryItem(item)" />
+                    <q-btn dense flat size="sm" icon="content_copy" label="追加到 Shell" @click="copyToEditor(item)" />
+                  </div>
+                </div>
               </q-item-section>
             </q-item>
           </q-list>
@@ -101,6 +105,11 @@ const resizeStore = useResizeStore()
 const { responseBody, responseStatus, loading, responseDuration, executeRequest } = useRestKibana()
 
 const maxHistorySize = ref(restKibanaStore.maxHistorySize)
+const previewId = ref<number | null>(null)
+
+const togglePreview = (id: number) => {
+  previewId.value = previewId.value === id ? null : id
+}
 
 const statusClass = computed(() => {
   if (responseStatus.value.match(/^2/)) return 'bg-positive text-white'
@@ -134,3 +143,19 @@ const updateMaxHistory = (val: number | string | null) => {
   }
 }
 </script>
+
+<style scoped>
+.kibana-history-preview {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: 'Hack', monospace;
+  max-height: 200px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+</style>
