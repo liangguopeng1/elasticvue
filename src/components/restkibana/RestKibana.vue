@@ -116,7 +116,8 @@ const formatTime = (timestamp: number) => {
 
 const useHistoryItem = (item: KibanaHistoryItem) => {
   const content = item.body ? `${item.method} ${item.path}\n${item.body}` : `${item.method} ${item.path}`
-  restKibanaStore.editorContent = content
+  const current = restKibanaStore.editorContent.trimEnd()
+  restKibanaStore.editorContent = current ? `${current}\n\n${content}` : content
   restKibanaStore.activeTab = 'shell'
 }
 
