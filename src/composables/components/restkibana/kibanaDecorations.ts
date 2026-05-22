@@ -151,8 +151,8 @@ export const kibanaTheme = EditorView.baseTheme({
   '.cm-kibana-active-block': {
     borderLeft: '3px solid #1976d2',
     paddingLeft: '8px',
-    backgroundColor: 'rgba(25, 118, 210, 0.06)',
-    boxShadow: 'inset 0 0 0 1000px rgba(25, 118, 210, 0.04)'
+    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+    boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15), inset 0 0 0 1000px rgba(25, 118, 210, 0.06)'
   },
   '.cm-kibana-method': {
     color: '#d32f2f',
@@ -170,8 +170,8 @@ export const kibanaTheme = EditorView.baseTheme({
   },
   '&dark .cm-kibana-active-block': {
     borderLeft: '3px solid #42a5f5',
-    backgroundColor: 'rgba(66, 165, 245, 0.08)',
-    boxShadow: 'inset 0 0 0 1000px rgba(66, 165, 245, 0.05)'
+    backgroundColor: 'rgba(66, 165, 245, 0.14)',
+    boxShadow: '0 2px 8px rgba(66, 165, 245, 0.2), inset 0 0 0 1000px rgba(66, 165, 245, 0.08)'
   },
   '&dark .cm-kibana-method': {
     color: '#ef5350'
