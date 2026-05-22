@@ -352,6 +352,92 @@ const getRequestLineCompletions = async (
   return { from: segmentFrom, filter: false, options }
 }
 
+/**
+ * Detect the parent key context by scanning backwards from cursor position.
+ * Returns the nearest parent key name (e.g. "query", "bool", "aggs").
+ */
+const getParentKeyContext = (doc: string, pos: number): string => {
+  const before = doc.slice(0, pos)
+  let depth = 0
+
+  // Walk backwards to find the nearest enclosing key
+  for (let i = before.length - 1; i >= 0; i--) {
+    const ch = before[i]
+    if (ch === '}' || ch === ']') depth++
+    else if (ch === '{' || ch === '[') {
+      if (depth === 0) {
+        // Found the opening brace for our level - find the key before it
+        const preceding = before.slice(0, i).trimEnd()
+        // Look for "key": pattern
+        const keyMatch = preceding.match(/"([^"]+)"\s*:\s*$/)
+        if (keyMatch) return keyMatch[1]
+        return 'root'
+      }
+      depth--
+    }
+  }
+  return 'root'
+}
+
+// Context-aware keyword sets
+const CONTEXT_KEYWORDS: Record<string, string[]> = {
+  root: [
+    'query', 'size', 'from', 'sort', '_source', 'timeout', 'track_total_hits',
+    'highlight', 'aggs', 'aggregations', 'post_filter', 'rescore',
+    'collapse', 'search_after', 'pit', 'min_score', 'explain',
+    'version', 'seq_no_primary_term', 'stored_fields', 'script_fields',
+    'indices_boost', 'suggest', 'profile', 'ext', 'script'
+  ],
+  query: [
+    'match', 'match_all', 'match_none', 'match_phrase', 'match_phrase_prefix',
+    'multi_match', 'query_string', 'simple_query_string', 'combined_fields',
+    'term', 'terms', 'terms_set', 'range', 'exists', 'prefix',
+    'wildcard', 'regexp', 'fuzzy', 'ids',
+    'bool', 'boosting', 'constant_score', 'dis_max', 'function_score',
+    'nested', 'has_child', 'has_parent', 'parent_id',
+    'geo_bounding_box', 'geo_distance', 'geo_polygon', 'geo_shape',
+    'more_like_this', 'percolate', 'rank_feature', 'script_score',
+    'wrapper', 'pinned'
+  ],
+  bool: ['must', 'must_not', 'should', 'filter', 'minimum_should_match', 'boost'],
+  match: ['query', 'operator', 'analyzer', 'fuzziness', 'prefix_length', 'max_expansions', 'lenient', 'zero_terms_query', 'boost'],
+  match_phrase: ['query', 'analyzer', 'slop', 'boost'],
+  multi_match: ['query', 'fields', 'type', 'operator', 'analyzer', 'tie_breaker', 'fuzziness', 'boost'],
+  term: ['value', 'boost'],
+  range: ['gte', 'gt', 'lte', 'lt', 'format', 'time_zone', 'boost'],
+  query_string: ['query', 'default_field', 'fields', 'default_operator', 'analyzer', 'allow_leading_wildcard', 'fuzziness', 'boost'],
+  simple_query_string: ['query', 'fields', 'default_operator', 'flags', 'analyzer', 'boost'],
+  function_score: ['query', 'functions', 'score_mode', 'boost_mode', 'max_boost', 'min_score', 'boost'],
+  nested: ['path', 'query', 'score_mode', 'ignore_unmapped'],
+  has_child: ['type', 'query', 'min_children', 'max_children', 'score_mode'],
+  has_parent: ['parent_type', 'query', 'score', 'ignore_unmapped'],
+  highlight: ['fields', 'pre_tags', 'post_tags', 'fragment_size', 'number_of_fragments', 'type', 'order'],
+  sort: ['order', 'mode', 'missing', 'unmapped_type', 'nested'],
+  aggs: [],
+  aggregations: [],
+  _source: ['includes', 'excludes'],
+  collapse: ['field', 'inner_hits', 'max_concurrent_group_searches'],
+  rescore: ['window_size', 'query'],
+  suggest: [],
+  script: ['source', 'lang', 'params'],
+  settings: ['number_of_shards', 'number_of_replicas', 'refresh_interval', 'analysis'],
+  mappings: ['properties', 'dynamic', '_source'],
+  properties: ['type', 'analyzer', 'index', 'store', 'fields', 'properties', 'format']
+}
+
+const getKeywordsForContext = (parentContext: string): string[] => {
+  // Check for exact context match
+  if (CONTEXT_KEYWORDS[parentContext]) {
+    return CONTEXT_KEYWORDS[parentContext]
+  }
+  // For query-type contexts (inside must/should/filter arrays), show query types
+  if (['must', 'must_not', 'should', 'filter', 'post_filter'].includes(parentContext)) {
+    return CONTEXT_KEYWORDS['query']
+  }
+  // Default: show all keywords
+  return ES_QUERY_KEYWORDS
+}
+
 const getBodyCompletions = async (
   context: CompletionContext,
   indexName: string
@@ -362,10 +448,12 @@ const getBodyCompletions = async (
   const from = word?.from ?? context.pos
   const typed = (word?.text || '').toLowerCase()
   const isKeyPosition = isPropertyNamePosition(context)
+  const parentContext = getParentKeyContext(context.state.doc.toString(), context.pos)
 
   if (isKeyPosition) {
-    // Suggest property keys - use snippet templates when available
-    const options = ES_QUERY_KEYWORDS
+    // Get context-appropriate keywords
+    const allowedKeywords = getKeywordsForContext(parentContext)
+    const options = allowedKeywords
       .filter(w => fuzzyMatch(typed, w))
       .map(w => {
         const snippet = ES_KEYWORD_SNIPPETS[w]
