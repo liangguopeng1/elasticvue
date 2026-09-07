@@ -1,9 +1,9 @@
 <template>
-  <q-btn :label="t('query.rest_query_examples.heading')" icon="info" color="dark-grey" class="q-mb-sm" @click="dialog = true" />
+  <q-btn :label="t('query.rest_query_examples.heading')" icon="info" color="dark-grey" dense unelevated @click="dialog = true" />
 
   <q-dialog v-model="dialog" transition-duration="100">
-    <q-card style="min-width: 900px; max-width: 1600px">
-      <q-card-section class="flex justify-between">
+    <q-card class="column no-wrap rest-query-examples-card">
+      <q-card-section class="col-auto flex justify-between">
         <div class="flex">
           <h2 class="text-h6 q-my-none">
             {{ t('query.rest_query_examples.heading') }}
@@ -14,61 +14,65 @@
 
       <q-separator />
 
-      <div class="flex justify-end q-pa-md">
+      <div class="col-auto flex justify-end q-pa-md">
         <filter-input v-model="filter" />
       </div>
 
-      <q-table
-        flat
-        dense
-        row-key="description"
-        :columns="columns"
-        :rows="filteredExamples"
-        :rows-per-page-options="[0]"
-        hide-pagination
-      >
-        <template #body="props">
-          <tr>
-            <td class="font--mono">
-              <span :class="`http-${props.row.method}`" class="text-bold">{{ props.row.method }}</span>
-              {{ props.row.path }}
-            </td>
-            <td>
-              <div class="flex justify-between">
-                <div>
-                  {{ props.row.description }}
+      <div class="col rest-query-examples-body table--sticky-header">
+        <q-table
+          flat
+          dense
+          row-key="id"
+          class="full-height"
+          :columns="columns"
+          :rows="filteredExamples"
+          :rows-per-page-options="[0]"
+          hide-pagination
+        >
+          <template #body="props">
+            <tr>
+              <td class="font--mono">
+                <span :class="`http-${props.row.method}`" class="text-bold">{{ props.row.method }}</span>
+                {{ props.row.path }}
+              </td>
+              <td>
+                <div class="flex justify-between">
+                  <div>
+                    {{ props.row.description }}
+                  </div>
+                  <q-btn icon="info" flat dense size="sm" :href="props.row.doc" round target="_blank" />
                 </div>
-                <q-btn icon="info" flat dense size="sm" :href="props.row.doc" round target="_blank" />
-              </div>
-            </td>
-            <td class="small-wrap">
-              <q-btn-group v-if="props.row.body.length > 0">
-                <q-btn label="Preview" color="dark-grey" @click="props.expand = !props.expand" />
-                <q-btn :label="t('query.rest_query_examples.table.row.use')" color="dark-grey" @click="useRequest(props.row)" />
-              </q-btn-group>
-              <div v-else class="flex justify-end">
-                <q-btn :label="t('query.rest_query_examples.table.row.use')" color="dark-grey" @click="useRequest(props.row)" />
-              </div>
-            </td>
-          </tr>
-          <tr v-show="props.expand" v-if="props.row.body.length > 0">
-            <td colspan="42">
-              <div class="q-my-md">
-                <div class="q-mb-md">
-                  <span :class="`http-${props.row.method}`" class="text-bold">{{ props.row.method }}</span>
-                  {{ props.row.path }}
+              </td>
+              <td class="small-wrap">
+                <q-btn-group v-if="props.row.body.length > 0">
+                  <q-btn label="Preview" color="dark-grey" @click="props.expand = !props.expand" />
+                  <q-btn :label="t('query.rest_query_examples.table.row.use')" color="dark-grey" @click="useRequest(props.row)" />
+                </q-btn-group>
+                <div v-else class="flex justify-end">
+                  <q-btn :label="t('query.rest_query_examples.table.row.use')" color="dark-grey" @click="useRequest(props.row)" />
                 </div>
+              </td>
+            </tr>
+            <tr v-show="props.expand" v-if="props.row.body.length > 0">
+              <td colspan="42">
+                <div class="q-my-md">
+                  <div class="q-mb-md">
+                    <span :class="`http-${props.row.method}`" class="text-bold">{{ props.row.method }}</span>
+                    {{ props.row.path }}
+                  </div>
+                  <resizable-container :min-height="200">
+                    <code-viewer :value="props.row.body" />
+                  </resizable-container>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </q-table>
+      </div>
 
-                <resizable-container :min-height="200">
-                  <code-viewer :value="props.row.body" />
-                </resizable-container>
-              </div>
-            </td>
-          </tr>
-        </template>
-      </q-table>
+      <q-separator />
 
-      <q-card-section>
+      <q-card-section class="col-auto">
         <q-btn v-close-popup flat :label="t('defaults.close')" />
       </q-card-section>
     </q-card>
@@ -91,6 +95,7 @@ const filter = ref('')
 const emit = defineEmits(['useRequest'])
 
 type Row = {
+  id: string
   method: string
   path: string
   body: string
@@ -100,11 +105,18 @@ const useRequest = (row: Row) => {
   dialog.value = false
 }
 
+const examples = computed(() =>
+  REST_QUERY_EXAMPLES.map((example) => ({
+    ...example,
+    description: t(`query.rest_query_examples.items.${example.id}`)
+  }))
+)
+
 const filteredExamples = computed(() => {
   const filterValue = filter.value.trim()
-  if (filterValue.length === 0) return REST_QUERY_EXAMPLES
+  if (filterValue.length === 0) return examples.value
 
-  return REST_QUERY_EXAMPLES.filter((example) => {
+  return examples.value.filter((example) => {
     return example.method.includes(filterValue) || example.path.includes(filterValue) || example.description.includes(filterValue)
   })
 })
@@ -119,3 +131,16 @@ const columns = genColumns([
   { label: '' }
 ])
 </script>
+
+<style scoped>
+.rest-query-examples-card {
+  min-width: 900px;
+  max-width: 1600px;
+  width: 90vw;
+  max-height: 85vh;
+}
+.rest-query-examples-body {
+  min-height: 0;
+  overflow: auto;
+}
+</style>

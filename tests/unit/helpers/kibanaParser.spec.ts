@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseKibanaRequests, getRequestAtLine, KibanaRequest } from '../../../src/composables/components/restkibana/kibanaParser'
+import { parseKibanaRequests, getRequestAtLine, getActiveRequestAtLine, KibanaRequest } from '../../../src/composables/components/restkibana/kibanaParser'
 
 describe('kibanaParser', () => {
   describe('parseKibanaRequests', () => {
@@ -273,6 +273,33 @@ PUT /fourth
     it('should handle empty requests array', () => {
       const result = getRequestAtLine([], 0)
       expect(result).toBeNull()
+    })
+  })
+
+  describe('getActiveRequestAtLine', () => {
+    it('returns the previous request when the cursor is on a blank line between requests', () => {
+      const input = `GET /_cat/indices
+
+POST /_search`
+      const requests = parseKibanaRequests(input)
+      expect(getActiveRequestAtLine(requests, 1)?.method).toBe('GET')
+      expect(getActiveRequestAtLine(requests, 1)?.path).toBe('/_cat/indices')
+    })
+
+    it('returns the enclosing request when the cursor is in a JSON body', () => {
+      const input = `POST /_search
+{
+  "query": {}
+}`
+      const requests = parseKibanaRequests(input)
+      expect(getActiveRequestAtLine(requests, 2)?.method).toBe('POST')
+    })
+
+    it('returns null when the cursor is before the first request', () => {
+      const input = `# comment
+GET /_search`
+      const requests = parseKibanaRequests(input)
+      expect(getActiveRequestAtLine(requests, 0)).toBeNull()
     })
   })
 

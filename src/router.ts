@@ -5,7 +5,6 @@ import GlobalSettings from './components/settings/GlobalSettings.vue'
 import IndexShards from './components/shards/IndexShards.vue'
 import HomePage from './components/home/HomePage.vue'
 import ClusterNodes from './components/nodes/ClusterNodes.vue'
-import RestQuery from './components/rest/RestQuery.vue'
 import NestedView from './components/base/NestedView.vue'
 import { useConnectionStore } from './store/connection'
 import WelcomePage from './components/welcome/WelcomePage.vue'
@@ -38,7 +37,7 @@ const routes = [
       { path: 'shards/recovery', name: 'shard_recovery', component: ShardRecovery },
       { path: 'nodes', name: 'nodes', component: ClusterNodes },
       { path: 'search', name: 'search', component: SearchDocuments },
-      { path: 'rest', name: 'rest', component: RestQuery },
+      { path: 'rest', name: 'rest', redirect: { name: 'rest_kibana' } },
       { path: 'rest_kibana', name: 'rest_kibana', component: () => import('./components/restkibana/RestKibana.vue') },
       { path: 'snapshot_repositories', name: 'snapshot_repositories', component: SnapshotRepositories },
       { path: 'snapshot_repositories/:repositoryName', name: 'snapshots', component: RepositorySnapshots }

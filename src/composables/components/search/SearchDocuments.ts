@@ -1,9 +1,9 @@
 import { useElasticsearchAdapter } from '../../CallElasticsearch'
 import { useSearchStore } from '../../../store/search'
 import { useResizeStore } from '../../../store/resize'
-import { Ref, ref, watch } from 'vue'
+import { computed, Ref, ref, watch } from 'vue'
 import { parseJson } from '../../../helpers/json/parse'
-import { DEFAULT_SEARCH_QUERY_OBJ } from '../../../consts'
+import { DEFAULT_SEARCH_QUERY_OBJ, MAX_SEARCH_RESULT_WINDOW } from '../../../consts'
 import { stringifyJson } from '../../../helpers/json/stringify.ts'
 import {
   buildQueryFromTableOptions,
@@ -26,6 +26,21 @@ type EsSearchResultsHitsValues = {
   value: number
 }
 
+const hitsTotalValue = (total: EsSearchResultHits['total'] | undefined): number => {
+  if (typeof total === 'number') return total
+  return total?.value ?? 0
+}
+
+const clampSearchWindow = (query: Record<string, unknown>) => {
+  if (query.track_total_hits === undefined) query.track_total_hits = true
+  let size = typeof query.size === 'number' && query.size > 0 ? query.size : 10
+  let from = typeof query.from === 'number' && query.from >= 0 ? query.from : 0
+  if (size > MAX_SEARCH_RESULT_WINDOW) size = MAX_SEARCH_RESULT_WINDOW
+  if (from + size > MAX_SEARCH_RESULT_WINDOW) from = Math.max(0, MAX_SEARCH_RESULT_WINDOW - size)
+  query.size = size
+  query.from = from
+}
+
 export const useSearchDocuments = () => {
   const { requestState, callElasticsearch } = useElasticsearchAdapter()
 
@@ -44,14 +59,15 @@ export const useSearchDocuments = () => {
       return
     }
 
+    clampSearchWindow(query as Record<string, unknown>)
     const pag = paginationFromQuery(query as Record<string, unknown>, searchStore.pagination.rowsPerPage)
     searchStore.pagination.page = pag.page
     searchStore.pagination.rowsPerPage = pag.rowsPerPage
 
     try {
       searchResults.value = await callElasticsearch('search', query, searchStore.indices)
-      const total = searchResults.value.hits?.total
-      searchStore.pagination.rowsNumber = typeof total === 'number' ? total : total.value
+      const actualTotal = hitsTotalValue(searchResults.value.hits?.total)
+      searchStore.pagination.rowsNumber = Math.min(actualTotal, MAX_SEARCH_RESULT_WINDOW)
     } catch (e) {
       console.error(e)
       searchResults.value = { took: null, hits: { total: { value: 0 } } }
@@ -121,9 +137,12 @@ export const useSearchDocuments = () => {
     }
   ]
 
+  const hitsTotal = computed(() => hitsTotalValue(searchResults.value.hits?.total))
+
   return {
     search,
     searchResults,
+    hitsTotal,
     searchStore,
     resizeStore,
     queryParsingError,

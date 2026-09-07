@@ -1,12 +1,13 @@
 <template>
   <div>
     <q-card class="q-mb-md">
-      <q-card-section class="q-pb-none">
-        <q-tabs v-model="restKibanaStore.activeTab" dense class="text-grey" active-color="primary" indicator-color="primary" align="left" narrow-indicator>
+      <q-card-section class="q-py-none flex items-center no-wrap">
+        <q-tabs v-model="restKibanaStore.activeTab" dense class="text-grey col" active-color="primary" indicator-color="primary" align="left" narrow-indicator>
           <q-tab name="shell" label="Shell" />
           <q-tab name="history" label="历史记录" />
           <q-tab name="settings" label="配置" />
         </q-tabs>
+        <rest-query-examples class="q-mr-sm" @use-request="useExample" />
       </q-card-section>
 
       <q-separator />
@@ -22,7 +23,7 @@
                   @execute="executeRequest"
                 />
               </div>
-              <div class="col-6 q-pl-sm full-height" style="position: relative">
+              <div class="col-6 q-pl-sm full-height kibana-response-viewer" style="position: relative">
                 <q-spinner v-if="loading" class="absolute-center" style="z-index: 5" size="2em" color="primary" />
                 <code-viewer :value="responseBody" />
                 <div v-if="responseStatus || responseDuration" class="q-pa-xs" style="position: absolute; bottom: 4px; right: 8px; display: flex; align-items: center; gap: 8px; z-index: 5">
@@ -97,8 +98,10 @@ import { useRestKibana } from '../../composables/components/restkibana/RestKiban
 import { KibanaHistoryItem, useRestKibanaStore } from '../../store/restKibana'
 import { useResizeStore } from '../../store/resize'
 import { writeToClipboard } from '../../helpers/clipboard'
+import { beautify } from '../../helpers/beautify'
 import KibanaCodeEditor from './KibanaCodeEditor.vue'
 import ResizableContainer from '../shared/ResizableContainer.vue'
+import RestQueryExamples from '../rest/RestQueryExamples.vue'
 
 const CodeViewer = defineAsyncComponent(() => import('../shared/CodeViewer.vue'))
 const t = useTranslation()
@@ -123,6 +126,14 @@ const statusClass = computed(() => {
 const formatTime = (timestamp: number) => {
   const date = new Date(timestamp)
   return date.toLocaleString()
+}
+
+const useExample = (request: { method: string; path: string; body: string }) => {
+  const body = request.body ? beautify(request.body) : ''
+  const content = body ? `${request.method} ${request.path}\n${body}` : `${request.method} ${request.path}`
+  const current = restKibanaStore.editorContent.trimEnd()
+  restKibanaStore.editorContent = current ? `${current}\n\n${content}` : content
+  restKibanaStore.activeTab = 'shell'
 }
 
 const useHistoryItem = (item: KibanaHistoryItem) => {
@@ -152,6 +163,17 @@ const updateMaxHistory = (val: number | string | null) => {
 </script>
 
 <style scoped>
+.kibana-response-viewer :deep(.cm-editor),
+.kibana-response-viewer :deep(.cm-content),
+.kibana-response-viewer :deep(.cm-gutters) {
+  font-family: Consolas, Monaco, monospace;
+  font-size: 14px;
+}
+
+.kibana-response-viewer :deep(.cm-editor .cm-content) {
+  font-weight: 400;
+}
+
 .kibana-history-preview {
   background: #f5f5f5;
   border: 1px solid #e0e0e0;

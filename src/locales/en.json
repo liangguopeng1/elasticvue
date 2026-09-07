@@ -154,6 +154,14 @@
         "clone": "Clone"
       }
     },
+    "index_settings": {
+      "text": "Edit settings",
+      "heading": "Edit index settings",
+      "index": "Index: {index}",
+      "help": "Only dynamic settings can be updated. Static settings such as number of shards are omitted.",
+      "invalid_json": "Invalid JSON",
+      "growl": "The settings of index '{index}' were successfully updated."
+    },
     "index_row": {
       "search": {
         "title": "Search '{index}'"
@@ -383,11 +391,47 @@
         "row": {
           "use": "Use"
         }
+      },
+      "items": {
+        "cat_indices": "Returns high-level information about indices in a cluster",
+        "cat_aliases": "Retrieves the cluster's index aliases, including filter and routing information",
+        "cat_shards": "The shards command is the detailed view of what nodes contain which shards",
+        "bulk": "Performs multiple indexing or delete operations in a single API call",
+        "create_api_key": "Create an API key with 1d expiration",
+        "flush": "Flush all indices to disk",
+        "reload_secure_settings": "Reloads the keystore on nodes in the cluster",
+        "create_index": "Create a simple index named \"example_test_index\"",
+        "set_writable": "Set all indices to writable",
+        "delete_index": "Delete an index named \"example_test_index\"",
+        "cluster_health": "Returns the health status of a cluster",
+        "cat_nodes": "Returns basic statistics about nodes in the cluster",
+        "search_match_all": "Search all indices with match_all",
+        "search_bool": "Search with a bool query, range filter and sort",
+        "search_aggs": "Search with a terms aggregation",
+        "count": "Count documents matching a query",
+        "get_mapping": "Get the mapping of an index",
+        "put_mapping": "Update the mapping of an index",
+        "index_doc": "Index a document with a given id",
+        "get_doc": "Get a document by id",
+        "reindex": "Copy documents from one index to another",
+        "list_snapshots": "List all snapshot repositories",
+        "put_snapshot_repo": "Register a shared file system snapshot repository",
+        "analyze": "Analyze text with the standard analyzer",
+        "update_by_query": "Update documents matching a query"
       }
     }
   },
   "rest_kibana": {
     "run_request": "Run request",
+    "run_button": "Run (Ctrl+Enter)",
+    "more_actions": "More actions",
+    "menu": {
+      "copy_as_curl": "Copy as curl",
+      "auto_indent": "Auto-indent",
+      "open_api_reference": "Open API reference",
+      "copy_success": "Copied curl command",
+      "copy_failed": "Failed to copy"
+    },
     "history": {
       "title": "Query History",
       "clear": "Clear All",
@@ -479,6 +523,7 @@
         "hint": "Search examples, see <a tabindex='-1' target='_blank' rel='noopener' href='https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html'>query string query</a> for details"
       },
       "search": "Search",
+      "total_hits": "{count} hits",
       "customize_query": {
         "button": "Custom search",
         "reset": "Reset query"

@@ -98,7 +98,6 @@
                   :total="hits.length"
                   :rows-per-page="rowsPerPage"
                   @update:model-value="onRowsPerPageSelect"
-                  @rows-per-page-accepted="acceptRowsPerPage"
                 />
               </template>
             </q-table>
@@ -159,7 +158,6 @@ const t = useTranslation()
 
 const {
   filterStateProps,
-  acceptRowsPerPage,
   tableColumns,
   searchStore,
   clearColumns,

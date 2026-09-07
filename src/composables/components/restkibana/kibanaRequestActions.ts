@@ -7,17 +7,17 @@ const normalizeBaseUrl = (url: string) => {
 }
 
 const normalizeRequestPath = (path: string) => {
-  return path.startsWith('/') ? path.slice(1) : path
+  const withoutBody = path.split(/\s*\{/)[0].trim()
+  return withoutBody.startsWith('/') ? withoutBody.slice(1) : withoutBody
 }
 
 export const buildCurlCommand = (request: KibanaRequest, clusterUrl = 'http://localhost:9200') => {
   const requestUrl = `${normalizeBaseUrl(clusterUrl)}${normalizeRequestPath(request.path)}`
   let curl = `curl -X ${request.method} "${requestUrl}"`
-
   if (request.body) {
-    curl += ` -H "Content-Type: application/json" -d '${request.body}'`
+    const escaped = request.body.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\r?\n/g, '\\n')
+    curl += ` -H "Content-Type: application/json" -d "${escaped}"`
   }
-
   return curl
 }
 

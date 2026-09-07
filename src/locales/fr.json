@@ -154,6 +154,14 @@
         "clone": "Cloner"
       }
     },
+    "index_settings": {
+      "text": "Modifier les paramètres",
+      "heading": "Modifier les paramètres de l'index",
+      "index": "Index: {index}",
+      "help": "Seuls les paramètres dynamiques peuvent être mis à jour. Les paramètres statiques tels que le nombre de shards sont omis.",
+      "invalid_json": "JSON invalide",
+      "growl": "Les paramètres de l'index '{index}' ont été mis à jour avec succès."
+    },
     "index_row": {
       "search": {
         "title": "Rechercher dans '{index}'"
@@ -365,11 +373,47 @@
         "row": {
           "use": "Utiliser"
         }
+      },
+      "items": {
+        "cat_indices": "Retourne des informations générales sur les index du cluster",
+        "cat_aliases": "Récupère les alias d'index du cluster, y compris le filtre et le routage",
+        "cat_shards": "Vue détaillée des shards présents sur chaque nœud",
+        "bulk": "Exécute plusieurs opérations d'indexation ou de suppression en un seul appel",
+        "create_api_key": "Crée une clé API expirant dans 1 jour",
+        "flush": "Vide tous les index sur disque",
+        "reload_secure_settings": "Recharge le keystore des nœuds du cluster",
+        "create_index": "Crée un index simple nommé \"example_test_index\"",
+        "set_writable": "Rend tous les index accessibles en écriture",
+        "delete_index": "Supprime l'index nommé \"example_test_index\"",
+        "cluster_health": "Retourne l'état de santé du cluster",
+        "cat_nodes": "Retourne des statistiques de base sur les nœuds du cluster",
+        "search_match_all": "Recherche dans tous les index avec match_all",
+        "search_bool": "Recherche avec une requête bool, un filtre range et un tri",
+        "search_aggs": "Recherche avec une agrégation terms",
+        "count": "Compte les documents correspondant à une requête",
+        "get_mapping": "Récupère le mapping d'un index",
+        "put_mapping": "Met à jour le mapping d'un index",
+        "index_doc": "Indexe un document avec un id donné",
+        "get_doc": "Récupère un document par id",
+        "reindex": "Copie des documents d'un index vers un autre",
+        "list_snapshots": "Liste tous les dépôts de snapshots",
+        "put_snapshot_repo": "Enregistre un dépôt de snapshots sur système de fichiers partagé",
+        "analyze": "Analyse un texte avec l'analyseur standard",
+        "update_by_query": "Met à jour les documents correspondant à une requête"
       }
     }
   },
   "rest_kibana": {
-    "run_request": "Run request",
+    "run_request": "Exécuter la requête",
+    "run_button": "Exécuter (Ctrl+Enter)",
+    "more_actions": "Plus d'actions",
+    "menu": {
+      "copy_as_curl": "Copier en curl",
+      "auto_indent": "Indentation automatique",
+      "open_api_reference": "Ouvrir la référence API",
+      "copy_success": "Commande curl copiée",
+      "copy_failed": "Échec de la copie"
+    },
     "history": {
       "title": "Query History",
       "clear": "Clear All",
@@ -461,6 +505,7 @@
         "hint": "Exemples, voir <a tabindex='-1' target='_blank' rel='noopener' href='https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html'>query string query</a> pour plus de détails"
       },
       "search": "Recherche",
+      "total_hits": "{count} résultats",
       "customize_query": {
         "button": "Recherche avancée",
         "reset": "Réinitialiser la requête"

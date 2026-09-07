@@ -56,3 +56,14 @@ export const parseKibanaRequests = (input: string): KibanaRequest[] => {
 export const getRequestAtLine = (requests: KibanaRequest[], line: number): KibanaRequest | null => {
   return requests.find(r => line >= r.startLine && line <= r.endLine) || null
 }
+
+export const getActiveRequestAtLine = (requests: KibanaRequest[], line: number): KibanaRequest | null => {
+  const exact = getRequestAtLine(requests, line)
+  if (exact) return exact
+  let active: KibanaRequest | null = null
+  for (const request of requests) {
+    if (request.startLine <= line) active = request
+    else break
+  }
+  return active
+}

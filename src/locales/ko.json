@@ -154,6 +154,14 @@
         "clone": "복제"
       }
     },
+    "index_settings": {
+      "text": "설정 수정",
+      "heading": "인덱스 설정 수정",
+      "index": "인덱스: {index}",
+      "help": "동적 설정만 업데이트할 수 있습니다. 샤드 수와 같은 정적 설정은 생략됩니다.",
+      "invalid_json": "잘못된 JSON",
+      "growl": "인덱스 '{index}'의 설정이 성공적으로 업데이트되었습니다."
+    },
     "index_row": {
       "search": {
         "title": "'{index}' 검색"
@@ -365,11 +373,47 @@
         "row": {
           "use": "사용"
         }
+      },
+      "items": {
+        "cat_indices": "클러스터의 인덱스 개요 정보를 반환합니다",
+        "cat_aliases": "클러스터의 인덱스 별칭(필터 및 라우팅 포함)을 조회합니다",
+        "cat_shards": "각 노드의 샤드 상세 분포를 보여줍니다",
+        "bulk": "한 번의 API 호출로 여러 색인 또는 삭제 작업을 수행합니다",
+        "create_api_key": "만료 기간 1일의 API 키를 생성합니다",
+        "flush": "모든 인덱스를 디스크에 플러시합니다",
+        "reload_secure_settings": "클러스터 노드의 키스토어를 다시 로드합니다",
+        "create_index": "example_test_index라는 간단한 인덱스를 생성합니다",
+        "set_writable": "모든 인덱스를 쓰기 가능으로 설정합니다",
+        "delete_index": "example_test_index 인덱스를 삭제합니다",
+        "cluster_health": "클러스터 상태를 반환합니다",
+        "cat_nodes": "클러스터 노드의 기본 통계를 반환합니다",
+        "search_match_all": "match_all로 모든 인덱스를 검색합니다",
+        "search_bool": "bool 쿼리, range 필터 및 정렬로 검색합니다",
+        "search_aggs": "terms 집계로 검색합니다",
+        "count": "쿼리와 일치하는 문서 수를 셉니다",
+        "get_mapping": "인덱스의 mapping을 조회합니다",
+        "put_mapping": "인덱스의 mapping을 업데이트합니다",
+        "index_doc": "지정한 id로 문서를 색인합니다",
+        "get_doc": "id로 문서를 조회합니다",
+        "reindex": "문서를 다른 인덱스로 복사합니다",
+        "list_snapshots": "모든 스냅샷 리포지토리를 나열합니다",
+        "put_snapshot_repo": "공유 파일 시스템 스냅샷 리포지토리를 등록합니다",
+        "analyze": "standard 분석기로 텍스트를 분석합니다",
+        "update_by_query": "쿼리와 일치하는 문서를 업데이트합니다"
       }
     }
   },
   "rest_kibana": {
-    "run_request": "Run request",
+    "run_request": "요청 실행",
+    "run_button": "실행 (Ctrl+Enter)",
+    "more_actions": "추가 작업",
+    "menu": {
+      "copy_as_curl": "curl로 복사",
+      "auto_indent": "자동 들여쓰기",
+      "open_api_reference": "API 참조 열기",
+      "copy_success": "curl 명령을 복사했습니다",
+      "copy_failed": "복사 실패"
+    },
     "history": {
       "title": "Query History",
       "clear": "Clear All",
@@ -461,6 +505,7 @@
         "hint": "검색 예시는 <a tabindex='-1' target='_blank' rel='noopener' href='https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html'>쿼리 문자열 쿼리</a>를 참조하세요"
       },
       "search": "검색",
+      "total_hits": "{count}건",
       "customize_query": {
         "button": "사용자 정의 검색",
         "reset": "쿼리 초기화"

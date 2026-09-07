@@ -28,7 +28,14 @@ export const DEFAULT_HIDE_INDICES_REGEX = '^\\..*'
 export const DEFAULT_HIDE_NODE_ATTRIBUTES_REGEX = '^(ml|xpack|transform)\\.'
 export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
 
-export const DEFAULT_SEARCH_QUERY_OBJ = { query: { query_string: { query: '*' } }, size: 10, from: 0, sort: [] }
+export const MAX_SEARCH_RESULT_WINDOW = 10000
+export const DEFAULT_SEARCH_QUERY_OBJ = {
+  query: { query_string: { query: '*' } },
+  size: 10,
+  from: 0,
+  sort: [],
+  track_total_hits: true
+}
 export const DEFAULT_SEARCH_QUERY = JSON.stringify(DEFAULT_SEARCH_QUERY_OBJ)
 export const DEFAULT_SEARCH_RESULT_COLUMNS = ['_index', '_type', '_id', '_score']
 export const DEFAULT_SORTABLE_COLUMNS = ['_index', '_type', '_id', '_score']
@@ -50,28 +57,28 @@ export const DISTRIBUTIONS = {
 
 export const REST_QUERY_EXAMPLES = [
   {
-    description: 'Returns high-level information about indices in a cluster',
+    id: 'cat_indices',
     method: 'GET',
     path: '_cat/indices',
     body: '',
     doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-indices.html'
   },
   {
-    description: 'Retrieves the cluster’s index aliases, including filter and routing information',
+    id: 'cat_aliases',
     method: 'GET',
     path: '_cat/aliases',
     body: '',
     doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-aliases.html'
   },
   {
-    description: 'The shards command is the detailed view of what nodes contain which shards',
+    id: 'cat_shards',
     method: 'GET',
     path: '_cat/shards',
     body: '',
     doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-shards.html'
   },
   {
-    description: 'Performs multiple indexing or delete operations in a single API call',
+    id: 'bulk',
     method: 'POST',
     path: '_bulk',
     body:
@@ -86,45 +93,191 @@ export const REST_QUERY_EXAMPLES = [
     doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html'
   },
   {
-    description: 'Create an API key with 1d expiration',
+    id: 'create_api_key',
     method: 'POST',
     path: '_security/api_key',
     body: '{"name": "my-api-key","expiration": "1d"}',
     doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html'
   },
   {
-    description: 'Flush all indices to disk',
+    id: 'flush',
     method: 'POST',
     path: '_flush',
     body: '',
     doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-flush.html'
   },
   {
-    description: 'Reloads the keystore on nodes in the cluster.',
+    id: 'reload_secure_settings',
     method: 'POST',
     path: '_nodes/reload_secure_settings',
     body: '',
     doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-reload-secure-settings.html'
   },
   {
-    description: 'Create a simple index named "example_test_index"',
+    id: 'create_index',
     method: 'PUT',
     path: 'example_test_index',
     body: '{"settings": {"index": {"number_of_shards": 2,"number_of_replicas": 1}}}',
     doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html'
   },
   {
-    description: 'Set all indices to writable',
+    id: 'set_writable',
     method: 'PUT',
     path: '_all/settings',
     body: '{"index": {"blocks": {"read_only_allow_delete": "false" } } }',
     doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-blocks.html'
   },
   {
-    description: 'Delete an index named "example_test_index".',
+    id: 'delete_index',
     method: 'DELETE',
     path: 'example_test_index',
     body: '',
     doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-delete-index.html'
+  },
+  {
+    id: 'cluster_health',
+    method: 'GET',
+    path: '_cluster/health',
+    body: '',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html'
+  },
+  {
+    id: 'cat_nodes',
+    method: 'GET',
+    path: '_cat/nodes',
+    body: '',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-nodes.html'
+  },
+  {
+    id: 'search_match_all',
+    method: 'POST',
+    path: '_search',
+    body: '{\n  "query": {\n    "match_all": {}\n  }\n}',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html'
+  },
+  {
+    id: 'search_bool',
+    method: 'POST',
+    path: 'example_test_index/_search',
+    body:
+      '{\n' +
+      '  "track_total_hits": true,\n' +
+      '  "query": {\n' +
+      '    "bool": {\n' +
+      '      "must": [{ "match": { "title": "elasticsearch" } }],\n' +
+      '      "filter": [{ "range": { "year": { "gte": 2020, "lte": 2026 } } }]\n' +
+      '    }\n' +
+      '  },\n' +
+      '  "sort": [{ "_score": { "order": "desc" } }]\n' +
+      '}',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-bool-query.html'
+  },
+  {
+    id: 'search_aggs',
+    method: 'POST',
+    path: 'example_test_index/_search',
+    body:
+      '{\n' +
+      '  "size": 0,\n' +
+      '  "aggs": {\n' +
+      '    "genres": {\n' +
+      '      "terms": { "field": "genre.keyword" }\n' +
+      '    }\n' +
+      '  }\n' +
+      '}',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-terms-aggregation.html'
+  },
+  {
+    id: 'count',
+    method: 'POST',
+    path: 'example_test_index/_count',
+    body: '{\n  "query": {\n    "match_all": {}\n  }\n}',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/search-count.html'
+  },
+  {
+    id: 'get_mapping',
+    method: 'GET',
+    path: 'example_test_index/_mapping',
+    body: '',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html'
+  },
+  {
+    id: 'put_mapping',
+    method: 'PUT',
+    path: 'example_test_index/_mapping',
+    body:
+      '{\n' +
+      '  "properties": {\n' +
+      '    "title": { "type": "text" },\n' +
+      '    "created_at": { "type": "date" }\n' +
+      '  }\n' +
+      '}',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html'
+  },
+  {
+    id: 'index_doc',
+    method: 'PUT',
+    path: 'example_test_index/_doc/1',
+    body: '{\n  "title": "Hello Elasticsearch",\n  "created_at": "2026-01-01"\n}',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html'
+  },
+  {
+    id: 'get_doc',
+    method: 'GET',
+    path: 'example_test_index/_doc/1',
+    body: '',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html'
+  },
+  {
+    id: 'reindex',
+    method: 'POST',
+    path: '_reindex',
+    body:
+      '{\n' +
+      '  "source": { "index": "example_test_index" },\n' +
+      '  "dest": { "index": "example_test_index_copy" }\n' +
+      '}',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html'
+  },
+  {
+    id: 'list_snapshots',
+    method: 'GET',
+    path: '_snapshot',
+    body: '',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/get-snapshot-repo-api.html'
+  },
+  {
+    id: 'put_snapshot_repo',
+    method: 'PUT',
+    path: '_snapshot/es_backup',
+    body:
+      '{\n' +
+      '  "type": "fs",\n' +
+      '  "settings": {\n' +
+      '    "location": "/mount/backups/es_backup"\n' +
+      '  }\n' +
+      '}',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/put-snapshot-repo-api.html'
+  },
+  {
+    id: 'analyze',
+    method: 'POST',
+    path: '_analyze',
+    body: '{\n  "analyzer": "standard",\n  "text": "The quick brown fox"\n}',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-analyze.html'
+  },
+  {
+    id: 'update_by_query',
+    method: 'POST',
+    path: 'example_test_index/_update_by_query',
+    body:
+      '{\n' +
+      '  "query": { "term": { "status": "old" } },\n' +
+      '  "script": {\n' +
+      '    "source": "ctx._source.status = \\"new\\"",\n' +
+      '    "lang": "painless"\n' +
+      '  }\n' +
+      '}',
+    doc: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html'
   }
 ]

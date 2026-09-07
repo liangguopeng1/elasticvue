@@ -154,6 +154,14 @@
         "clone": "複製"
       }
     },
+    "index_settings": {
+      "text": "修改設定",
+      "heading": "修改索引設定",
+      "index": "索引：{index}",
+      "help": "僅可更新動態設定。分片數等靜態設定已省略。",
+      "invalid_json": "JSON 格式無效",
+      "growl": "索引 '{index}' 的設定已成功更新。"
+    },
     "index_row": {
       "search": {
         "title": "搜尋 '{index}'"
@@ -365,19 +373,55 @@
         "row": {
           "use": "使用"
         }
+      },
+      "items": {
+        "cat_indices": "返回叢集中索引的概要資訊",
+        "cat_aliases": "取得叢集的索引別名，包含過濾與路由資訊",
+        "cat_shards": "查看各節點上分片的詳細分布",
+        "bulk": "在一次請求中執行多個索引或刪除操作",
+        "create_api_key": "建立一個有效期為 1 天的 API key",
+        "flush": "將所有索引刷新到磁碟",
+        "reload_secure_settings": "重新載入叢集節點上的金鑰庫",
+        "create_index": "建立一個名為 example_test_index 的簡單索引",
+        "set_writable": "將所有索引設為可寫",
+        "delete_index": "刪除名為 example_test_index 的索引",
+        "cluster_health": "返回叢集的健康狀態",
+        "cat_nodes": "返回叢集中節點的基本統計資訊",
+        "search_match_all": "使用 match_all 搜尋所有索引",
+        "search_bool": "使用 bool 查詢、range 過濾與排序進行搜尋",
+        "search_aggs": "使用 terms 聚合進行搜尋",
+        "count": "統計符合查詢的文件數量",
+        "get_mapping": "取得索引的 mapping",
+        "put_mapping": "更新索引的 mapping",
+        "index_doc": "依指定 id 寫入文件",
+        "get_doc": "依 id 取得文件",
+        "reindex": "將文件從一個索引複製到另一個索引",
+        "list_snapshots": "列出所有快照倉庫",
+        "put_snapshot_repo": "註冊一個共享檔案系統快照倉庫",
+        "analyze": "使用 standard 分析器分析文字",
+        "update_by_query": "依查詢條件更新文件"
       }
     }
   },
   "rest_kibana": {
-    "run_request": "Run request",
+    "run_request": "執行請求",
+    "run_button": "執行 (Ctrl+Enter)",
+    "more_actions": "更多操作",
+    "menu": {
+      "copy_as_curl": "複製為 curl",
+      "auto_indent": "自動縮排",
+      "open_api_reference": "開啟 API 文件",
+      "copy_success": "已複製 curl 命令",
+      "copy_failed": "複製失敗"
+    },
     "history": {
-      "title": "Query History",
-      "clear": "Clear All",
-      "empty": "No history yet"
+      "title": "查詢歷史",
+      "clear": "全部清除",
+      "empty": "尚無歷史記錄"
     },
     "settings": {
-      "max_history": "Max history records",
-      "max_history_hint": "Range: 1 - 9999. Default: 1000"
+      "max_history": "最大歷史記錄數",
+      "max_history_hint": "範圍：1 - 9999。預設：1000"
     }
   },
   "repositories": {
@@ -461,6 +505,7 @@
         "hint": "搜尋範例，詳情請參閱 <a tabindex='-1' target='_blank' rel='noopener' href='https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html'>Query string 查詢</a>"
       },
       "search": "搜尋",
+      "total_hits": "共 {count} 筆",
       "customize_query": {
         "button": "自訂搜尋",
         "reset": "重設查詢"

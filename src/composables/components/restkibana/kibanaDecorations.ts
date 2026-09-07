@@ -12,8 +12,11 @@ const methodMark = Decoration.mark({ class: 'cm-kibana-method' })
 const indexMark = Decoration.mark({ class: 'cm-kibana-index' })
 const pathMark = Decoration.mark({ class: 'cm-kibana-path' })
 
-// Decoration for current active request block (blue left border)
-const activeBlockLine = Decoration.line({ class: 'cm-kibana-active-block' })
+// Decoration for current active request block (Kibana-style outline + left bar)
+const activeBlockMiddle = Decoration.line({ class: 'cm-kibana-active-block' })
+const activeBlockFirst = Decoration.line({ class: 'cm-kibana-active-block cm-kibana-active-block-first' })
+const activeBlockLast = Decoration.line({ class: 'cm-kibana-active-block cm-kibana-active-block-last' })
+const activeBlockSingle = Decoration.line({ class: 'cm-kibana-active-block cm-kibana-active-block-first cm-kibana-active-block-last' })
 
 /**
  * Plugin that highlights request lines with background + inline syntax coloring
@@ -102,7 +105,11 @@ const kibanaActiveBlockPlugin = ViewPlugin.fromClass(
       if (startLine > 0) {
         for (let i = startLine; i <= endLine; i++) {
           const line = doc.line(i)
-          builder.add(line.from, line.from, activeBlockLine)
+          const deco = startLine === endLine ? activeBlockSingle
+            : i === startLine ? activeBlockFirst
+            : i === endLine ? activeBlockLast
+            : activeBlockMiddle
+          builder.add(line.from, line.from, deco)
         }
       }
 
@@ -146,12 +153,23 @@ export const kibanaExtensions = [kibanaLineHighlightPlugin, kibanaActiveBlockPlu
 
 export const kibanaTheme = EditorView.baseTheme({
   '.cm-kibana-request-line': {
-    backgroundColor: 'rgba(76, 175, 80, 0.08)'
+    backgroundColor: 'transparent'
   },
   '.cm-kibana-active-block': {
-    borderLeft: '4px solid #1976d2',
-    paddingLeft: '8px',
-    backgroundColor: 'rgba(25, 118, 210, 0.04)'
+    backgroundColor: 'rgba(0, 97, 166, 0.08)',
+    boxShadow: 'inset 3px 0 0 #4d8ec4, inset -1px 0 0 #8eb4d0'
+  },
+  '.cm-kibana-active-block-first': {
+    boxShadow: 'inset 3px 0 0 #4d8ec4, inset -1px 0 0 #8eb4d0, inset 0 1px 0 #8eb4d0'
+  },
+  '.cm-kibana-active-block-last': {
+    boxShadow: 'inset 3px 0 0 #4d8ec4, inset -1px 0 0 #8eb4d0, inset 0 -1px 0 #8eb4d0'
+  },
+  '.cm-kibana-active-block-first.cm-kibana-active-block-last': {
+    boxShadow: 'inset 3px 0 0 #4d8ec4, inset -1px 0 0 #8eb4d0, inset 0 1px 0 #8eb4d0, inset 0 -1px 0 #8eb4d0'
+  },
+  '.cm-kibana-active-block.cm-activeLine': {
+    backgroundColor: 'rgba(0, 97, 166, 0.12)'
   },
   '.cm-kibana-method': {
     color: '#d32f2f',
@@ -164,12 +182,76 @@ export const kibanaTheme = EditorView.baseTheme({
   '.cm-kibana-path': {
     color: '#1565c0'
   },
+  '.cm-tooltip.cm-tooltip-autocomplete': {
+    border: '1px solid #d3dae6',
+    borderRadius: '4px',
+    backgroundColor: '#fff',
+    color: '#343741',
+    boxShadow: '0 2px 8px rgba(15, 25, 45, 0.14)',
+    overflow: 'hidden'
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul': {
+    fontFamily: 'Consolas, Monaco, monospace',
+    fontSize: '13px',
+    minWidth: '220px',
+    maxHeight: '16em',
+    padding: '2px 0'
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul > li': {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '3px 10px',
+    lineHeight: '1.45',
+    color: '#343741'
+  },
+  '&light .cm-tooltip-autocomplete ul li[aria-selected]': {
+    background: '#e6edf3',
+    color: '#343741'
+  },
+  '.cm-completionMatchedText': {
+    textDecoration: 'none',
+    color: '#0077cc',
+    fontWeight: '700'
+  },
+  '.cm-completionDetail': {
+    marginLeft: 'auto',
+    paddingLeft: '16px',
+    fontStyle: 'normal',
+    fontSize: '11px',
+    color: '#98a2b3'
+  },
+  '.cm-completionIcon': {
+    width: '12px',
+    height: '14px',
+    marginRight: '8px',
+    paddingRight: '0',
+    opacity: '0.55',
+    border: '1px solid currentColor',
+    borderRadius: '1px',
+    boxSizing: 'border-box',
+    backgroundImage: 'linear-gradient(currentColor, currentColor), linear-gradient(currentColor, currentColor), linear-gradient(currentColor, currentColor)',
+    backgroundSize: '6px 1.5px',
+    backgroundPosition: '2px 3px, 2px 6px, 2px 9px',
+    backgroundRepeat: 'no-repeat'
+  },
+  '.cm-completionIcon-function:after, .cm-completionIcon-method:after, .cm-completionIcon-class:after, .cm-completionIcon-interface:after, .cm-completionIcon-variable:after, .cm-completionIcon-constant:after, .cm-completionIcon-type:after, .cm-completionIcon-enum:after, .cm-completionIcon-property:after, .cm-completionIcon-keyword:after, .cm-completionIcon-namespace:after, .cm-completionIcon-text:after': {
+    content: 'none'
+  },
   '&dark .cm-kibana-request-line': {
-    backgroundColor: 'rgba(76, 175, 80, 0.15)'
+    backgroundColor: 'transparent'
   },
   '&dark .cm-kibana-active-block': {
-    borderLeft: '4px solid #42a5f5',
-    backgroundColor: 'rgba(66, 165, 245, 0.08)'
+    backgroundColor: 'rgba(66, 165, 245, 0.14)',
+    boxShadow: 'inset 3px 0 0 #1e88e5, inset -1px 0 0 #5c7a94'
+  },
+  '&dark .cm-kibana-active-block-first': {
+    boxShadow: 'inset 3px 0 0 #1e88e5, inset -1px 0 0 #5c7a94, inset 0 1px 0 #5c7a94'
+  },
+  '&dark .cm-kibana-active-block-last': {
+    boxShadow: 'inset 3px 0 0 #1e88e5, inset -1px 0 0 #5c7a94, inset 0 -1px 0 #5c7a94'
+  },
+  '&dark .cm-kibana-active-block-first.cm-kibana-active-block-last': {
+    boxShadow: 'inset 3px 0 0 #1e88e5, inset -1px 0 0 #5c7a94, inset 0 1px 0 #5c7a94, inset 0 -1px 0 #5c7a94'
   },
   '&dark .cm-kibana-method': {
     color: '#ef5350'
@@ -179,5 +261,20 @@ export const kibanaTheme = EditorView.baseTheme({
   },
   '&dark .cm-kibana-path': {
     color: '#64b5f6'
+  },
+  '&dark .cm-tooltip.cm-tooltip-autocomplete': {
+    backgroundColor: '#2d2d2d',
+    borderColor: '#555',
+    color: '#e0e0e0'
+  },
+  '&dark .cm-tooltip-autocomplete ul li[aria-selected]': {
+    background: '#3d4a5c',
+    color: '#e0e0e0'
+  },
+  '&dark .cm-completionMatchedText': {
+    color: '#64b5f6'
+  },
+  '&dark .cm-completionDetail': {
+    color: '#9e9e9e'
   }
 })

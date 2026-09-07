@@ -29,7 +29,10 @@
 
           <div class="col-auto">
             <q-btn :label="t('search.form.search')" color="primary-dark" type="submit" class="q-mt-sm" />
-            <div v-if="searchResults?.took" class="text-muted font-13 text-center">{{ searchResults.took }}ms</div>
+            <div v-if="searchResults.took !== null" class="text-muted font-13 text-center">
+              <div>{{ t('search.form.total_hits', { count: hitsTotal }) }}</div>
+              <div>{{ searchResults.took }}ms</div>
+            </div>
           </div>
         </div>
       </q-form>
@@ -105,7 +108,7 @@ const resetAndLoad = () => {
 }
 
 const t = useTranslation()
-const { search, searchResults, searchStore, resizeStore, queryParsingError, requestState, editorCommands, onRequest } =
+const { search, searchResults, hitsTotal, searchStore, resizeStore, queryParsingError, requestState, editorCommands, onRequest } =
   useSearchDocuments()
 onMounted(search)
 

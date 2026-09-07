@@ -72,6 +72,7 @@
             <q-separator />
 
             <index-aliases :index="index.index" @reload="emitReloadAndCloseMenu" />
+            <index-settings :index="index.index" @reload="emitReloadAndCloseMenu" />
             <index-reindex v-if="clusterVersionGt(1)" :index="index.index" @reload="emitReloadAndCloseMenu" />
             <index-clone v-if="clusterVersionGte(7)" :index="index.index" @reload="emitReloadAndCloseMenu" />
 
@@ -184,6 +185,7 @@
 
 <script setup lang="ts">
 import IndexAliases from './IndexAliases.vue'
+import IndexSettings from './IndexSettings.vue'
 import { IndexRowProps, useIndexRow } from '../../composables/components/indices/IndexRow'
 import { useTranslation } from '../../composables/i18n'
 import IndexReindex from './IndexReindex.vue'

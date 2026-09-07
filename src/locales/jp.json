@@ -154,6 +154,14 @@
         "clone": "クローン"
       }
     },
+    "index_settings": {
+      "text": "設定を編集",
+      "heading": "インデックス設定を編集",
+      "index": "インデックス: {index}",
+      "help": "動的設定のみ更新できます。シャード数などの静的設定は省略されます。",
+      "invalid_json": "無効な JSON",
+      "growl": "インデックス '{index}' の設定が正常に更新されました。"
+    },
     "index_row": {
       "search": {
         "title": "'{index}' を検索"
@@ -365,11 +373,47 @@
         "row": {
           "use": "使用"
         }
+      },
+      "items": {
+        "cat_indices": "クラスター内のインデックスの概要情報を返します",
+        "cat_aliases": "クラスターのインデックスエイリアス（フィルターとルーティングを含む）を取得します",
+        "cat_shards": "各ノード上のシャードの詳細な配置を表示します",
+        "bulk": "1 回の API 呼び出しで複数のインデックスまたは削除操作を実行します",
+        "create_api_key": "有効期限 1 日の API キーを作成します",
+        "flush": "すべてのインデックスをディスクにフラッシュします",
+        "reload_secure_settings": "クラスターノード上のキーストアを再読み込みします",
+        "create_index": "example_test_index という名前のシンプルなインデックスを作成します",
+        "set_writable": "すべてのインデックスを書き込み可能にします",
+        "delete_index": "example_test_index というインデックスを削除します",
+        "cluster_health": "クラスターのヘルス状態を返します",
+        "cat_nodes": "クラスター内ノードの基本統計を返します",
+        "search_match_all": "match_all ですべてのインデックスを検索します",
+        "search_bool": "bool クエリ、range フィルター、ソートで検索します",
+        "search_aggs": "terms 集計で検索します",
+        "count": "クエリに一致するドキュメント数をカウントします",
+        "get_mapping": "インデックスの mapping を取得します",
+        "put_mapping": "インデックスの mapping を更新します",
+        "index_doc": "指定した id でドキュメントをインデックスします",
+        "get_doc": "id でドキュメントを取得します",
+        "reindex": "ドキュメントを別のインデックスへコピーします",
+        "list_snapshots": "すべてのスナップショットリポジトリを一覧表示します",
+        "put_snapshot_repo": "共有ファイルシステムのスナップショットリポジトリを登録します",
+        "analyze": "standard アナライザーでテキストを解析します",
+        "update_by_query": "クエリに一致するドキュメントを更新します"
       }
     }
   },
   "rest_kibana": {
-    "run_request": "Run request",
+    "run_request": "リクエストを実行",
+    "run_button": "実行 (Ctrl+Enter)",
+    "more_actions": "その他の操作",
+    "menu": {
+      "copy_as_curl": "curl としてコピー",
+      "auto_indent": "自動インデント",
+      "open_api_reference": "API リファレンスを開く",
+      "copy_success": "curl コマンドをコピーしました",
+      "copy_failed": "コピーに失敗しました"
+    },
     "history": {
       "title": "Query History",
       "clear": "Clear All",
@@ -461,6 +505,7 @@
         "hint": "検索例については、<a tabindex='-1' target='_blank' rel='noopener' href='https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html'>クエリ文字列クエリ</a>を参照してください"
       },
       "search": "検索",
+      "total_hits": "{count} 件",
       "customize_query": {
         "button": "カスタム検索",
         "reset": "クエリをリセット"

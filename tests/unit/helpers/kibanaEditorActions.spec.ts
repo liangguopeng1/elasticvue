@@ -13,7 +13,7 @@ describe('KibanaEditor helpers', () => {
     }
 
     expect(buildCurlCommand(request, 'http://localhost:9200')).toBe(
-      `curl -X POST "http://localhost:9200/_search" -H "Content-Type: application/json" -d '{"query":{"match_all":{}}}'`
+      `curl -X POST "http://localhost:9200/_search" -H "Content-Type: application/json" -d "{\\"query\\":{\\"match_all\\":{}}}"`
     )
   })
 

@@ -154,6 +154,14 @@
         "clone": "克隆"
       }
     },
+    "index_settings": {
+      "text": "修改设置",
+      "heading": "修改索引设置",
+      "index": "索引: {index}",
+      "help": "仅可更新动态设置。分片数等静态设置已省略。",
+      "invalid_json": "JSON 格式无效",
+      "growl": "索引 '{index}' 的设置已成功更新。"
+    },
     "index_row": {
       "search": {
         "title": "搜索 '{index}'"
@@ -365,19 +373,55 @@
         "row": {
           "use": "使用"
         }
+      },
+      "items": {
+        "cat_indices": "返回集群中索引的概要信息",
+        "cat_aliases": "获取集群的索引别名，包括过滤和路由信息",
+        "cat_shards": "查看各节点上分片的详细分布",
+        "bulk": "在一次请求中执行多个索引或删除操作",
+        "create_api_key": "创建一个有效期为 1 天的 API key",
+        "flush": "将所有索引刷新到磁盘",
+        "reload_secure_settings": "重新加载集群节点上的密钥库",
+        "create_index": "创建一个名为 example_test_index 的简单索引",
+        "set_writable": "将所有索引设置为可写",
+        "delete_index": "删除名为 example_test_index 的索引",
+        "cluster_health": "返回集群的健康状态",
+        "cat_nodes": "返回集群中节点的基本统计信息",
+        "search_match_all": "使用 match_all 搜索所有索引",
+        "search_bool": "使用 bool 查询、range 过滤和排序进行搜索",
+        "search_aggs": "使用 terms 聚合进行搜索",
+        "count": "统计匹配查询的文档数量",
+        "get_mapping": "获取索引的 mapping",
+        "put_mapping": "更新索引的 mapping",
+        "index_doc": "按指定 id 写入文档",
+        "get_doc": "按 id 获取文档",
+        "reindex": "将文档从一个索引复制到另一个索引",
+        "list_snapshots": "列出所有快照仓库",
+        "put_snapshot_repo": "注册一个共享文件系统快照仓库",
+        "analyze": "使用 standard 分析器分析文本",
+        "update_by_query": "按查询条件更新文档"
       }
     }
   },
   "rest_kibana": {
-    "run_request": "Run request",
+    "run_request": "运行请求",
+    "run_button": "运行 (Ctrl+Enter)",
+    "more_actions": "更多操作",
+    "menu": {
+      "copy_as_curl": "复制为 curl",
+      "auto_indent": "自动缩进",
+      "open_api_reference": "打开 API 文档",
+      "copy_success": "已复制 curl 命令",
+      "copy_failed": "复制失败"
+    },
     "history": {
-      "title": "Query History",
-      "clear": "Clear All",
-      "empty": "No history yet"
+      "title": "查询历史",
+      "clear": "全部清除",
+      "empty": "暂无历史记录"
     },
     "settings": {
-      "max_history": "Max history records",
-      "max_history_hint": "Range: 1 - 9999. Default: 1000"
+      "max_history": "最大历史记录数",
+      "max_history_hint": "范围：1 - 9999。默认：1000"
     }
   },
   "repositories": {
@@ -461,6 +505,7 @@
         "hint": "搜索 <a tabindex='-1' target='_blank' rel='noopener' href='https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html'>查询 DSL</a> 获取支持"
       },
       "search": "搜索",
+      "total_hits": "共 {count} 条",
       "customize_query": {
         "button": "自定义查询",
         "reset": "重置语句"

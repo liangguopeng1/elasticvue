@@ -116,12 +116,10 @@ export const useSearchResultsTable = (props: SearchResultsTableProps, emit: any)
     { label: '10', value: 10, enabled: true },
     { label: '20', value: 20, enabled: true },
     { label: '100', value: 100, enabled: true },
-    { label: '1000', value: 1000, enabled: searchStore.rowsPerPageAccepted, needsConfirm: true }
+    { label: '1000', value: 1000, enabled: true }
   ]
 
   const filterStateProps = setupFilterState(hits, filteredHits)
-
-  const acceptRowsPerPage = (value: boolean) => (searchStore.rowsPerPageAccepted = value)
 
   const hasAggregations = computed(() => {
     return props.results?.aggregations && Object.keys(props.results.aggregations).length > 0
@@ -139,7 +137,6 @@ export const useSearchResultsTable = (props: SearchResultsTableProps, emit: any)
   })
 
   return {
-    acceptRowsPerPage,
     filterStateProps,
     tableColumns,
     searchStore,

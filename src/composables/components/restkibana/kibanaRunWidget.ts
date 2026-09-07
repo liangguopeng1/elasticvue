@@ -1,4 +1,4 @@
-import { RangeSetBuilder } from '@codemirror/state'
+import { Facet, RangeSetBuilder } from '@codemirror/state'
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, WidgetType } from '@codemirror/view'
 
 const REQUEST_LINE_REGEX = /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(.*)/
@@ -6,10 +6,14 @@ const MENU_STYLE_ID = 'kibana-run-widget-menu-styles'
 
 type MenuAction = 'copy-curl' | 'auto-indent' | 'open-docs'
 
-const menuItems: Array<{ icon: string; label: string; action: MenuAction }> = [
-  { icon: '📋', label: 'Copy as curl', action: 'copy-curl' },
-  { icon: '⟳', label: 'Auto-indent', action: 'auto-indent' },
-  { icon: '📖', label: 'Open API reference', action: 'open-docs' }
+export const kibanaTranslateFacet = Facet.define<(key: string) => string>({
+  combine: values => values[0] || ((key: string) => key)
+})
+
+const menuItems: Array<{ icon: string; labelKey: string; action: MenuAction }> = [
+  { icon: '📋', labelKey: 'rest_kibana.menu.copy_as_curl', action: 'copy-curl' },
+  { icon: '⟳', labelKey: 'rest_kibana.menu.auto_indent', action: 'auto-indent' },
+  { icon: '📖', labelKey: 'rest_kibana.menu.open_api_reference', action: 'open-docs' }
 ]
 
 export const findRequestLineNumbers = (input: string) => {
@@ -26,13 +30,14 @@ class RunButtonWidget extends WidgetType {
   }
 
   toDOM(view: EditorView) {
+    const t = view.state.facet(kibanaTranslateFacet)
     const container = document.createElement('span')
     container.className = 'kibana-run-widget'
 
     const runBtn = document.createElement('button')
     runBtn.className = 'kibana-run-btn'
     runBtn.innerHTML = '&#9654;'
-    runBtn.title = 'Run (Ctrl+Enter)'
+    runBtn.title = t('rest_kibana.run_button')
     runBtn.addEventListener('mousedown', (e) => {
       e.preventDefault()
       e.stopPropagation()
@@ -43,7 +48,7 @@ class RunButtonWidget extends WidgetType {
     const moreBtn = document.createElement('button')
     moreBtn.className = 'kibana-more-btn'
     moreBtn.innerHTML = '&#8942;'
-    moreBtn.title = 'More actions'
+    moreBtn.title = t('rest_kibana.more_actions')
     moreBtn.addEventListener('mousedown', (e) => {
       e.preventDefault()
       e.stopPropagation()
@@ -61,19 +66,22 @@ class RunButtonWidget extends WidgetType {
     const menu = document.createElement('div')
     menu.className = 'kibana-context-menu'
 
+    const t = view.state.facet(kibanaTranslateFacet)
+    menu.addEventListener('mousedown', (e) => e.stopPropagation())
     menuItems.forEach(item => {
       const menuItem = document.createElement('div')
       menuItem.className = 'kibana-context-menu-item'
-      menuItem.innerHTML = `<span class="kibana-menu-icon">${item.icon}</span>${item.label}`
-      menuItem.addEventListener('mousedown', (e) => {
+      menuItem.innerHTML = `<span class="kibana-menu-icon">${item.icon}</span>${t(item.labelKey)}`
+      menuItem.addEventListener('click', (e) => {
         e.preventDefault()
         e.stopPropagation()
-        menu.remove()
         const event = new CustomEvent('kibana-action', {
           detail: { line: this.lineNumber, action: item.action },
           bubbles: true
         })
         view.dom.dispatchEvent(event)
+        menu.remove()
+        document.removeEventListener('mousedown', closeMenu)
       })
       menu.appendChild(menuItem)
     })
@@ -108,21 +116,26 @@ export const kibanaRunWidgetPlugin = ViewPlugin.fromClass(
     }
 
     update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged) {
+      if (update.docChanged || update.selectionSet || update.viewportChanged) {
         this.decorations = this.buildDecorations(update.view)
       }
     }
 
     buildDecorations(view: EditorView): DecorationSet {
       const builder = new RangeSetBuilder<Decoration>()
-
-      for (let i = 1; i <= view.state.doc.lines; i++) {
-        const line = view.state.doc.line(i)
-        if (REQUEST_LINE_REGEX.test(line.text)) {
-          builder.add(line.to, line.to, Decoration.widget({ widget: new RunButtonWidget(i - 1), side: 1 }))
+      const doc = view.state.doc
+      const cursorLine = doc.lineAt(view.state.selection.main.head).number
+      let startLine = 0
+      for (let i = cursorLine; i >= 1; i--) {
+        if (REQUEST_LINE_REGEX.test(doc.line(i).text)) {
+          startLine = i
+          break
         }
       }
-
+      if (startLine > 0) {
+        const line = doc.line(startLine)
+        builder.add(line.to, line.to, Decoration.widget({ widget: new RunButtonWidget(startLine - 1), side: 1 }))
+      }
       return builder.finish()
     }
   },
@@ -137,42 +150,57 @@ export const kibanaRunWidgetTheme = EditorView.baseTheme({
     transform: 'translateY(-50%)',
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '2px',
-    zIndex: '10'
+    gap: '0',
+    zIndex: '10',
+    background: '#fff',
+    borderRadius: '4px',
+    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.06)',
+    padding: '1px 2px'
   },
   '.kibana-run-btn': {
     border: 'none',
-    background: '#1976d2',
-    color: 'white',
+    background: 'transparent',
+    color: '#0077cc',
     cursor: 'pointer',
     fontSize: '12px',
-    padding: '4px 8px',
+    padding: '3px 7px',
     borderRadius: '3px',
     lineHeight: '1',
     fontWeight: 'bold'
   },
   '.kibana-run-btn:hover': {
-    background: '#1565c0'
+    background: '#eef3f8',
+    color: '#005ea3'
   },
   '.kibana-more-btn': {
     border: 'none',
-    background: '#e0e0e0',
-    color: '#424242',
+    background: 'transparent',
+    color: '#535966',
     cursor: 'pointer',
-    fontSize: '14px',
-    padding: '4px 6px',
+    fontSize: '15px',
+    padding: '2px 6px',
     borderRadius: '3px',
     lineHeight: '1'
   },
   '.kibana-more-btn:hover': {
-    background: '#bdbdbd'
+    background: '#eef3f8'
+  },
+  '&dark .kibana-run-widget': {
+    background: '#2d2d2d',
+    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08)'
+  },
+  '&dark .kibana-run-btn': {
+    color: '#64b5f6'
+  },
+  '&dark .kibana-run-btn:hover': {
+    background: '#3d4a5c',
+    color: '#90caf9'
   },
   '&dark .kibana-more-btn': {
-    background: '#424242',
-    color: '#e0e0e0'
+    color: '#bdbdbd'
   },
   '&dark .kibana-more-btn:hover': {
-    background: '#616161'
+    background: '#3d4a5c'
   }
 })
 
